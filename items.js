@@ -1,6 +1,7 @@
 const itemList = {
     potionHeal: {
         name:'Health Potion',
+        spriteIndex: 1,
         onUse: (target)=>{
             target.heal(20);
             target.item = 'none';
@@ -11,6 +12,7 @@ const itemList = {
     },
     xSpe: {
         name:'X Speed',
+        spriteIndex: 1,
         onUse: (target)=>{
             target.changeStatStage('spe',10);
             target.item = 'none';
@@ -21,6 +23,7 @@ const itemList = {
     },
     xAtk: {
         name:'X Atk',
+        spriteIndex: 1,
         onUse: (target)=>{
             target.changeStatStage('atk',10);
             target.item = 'none';
@@ -31,12 +34,14 @@ const itemList = {
     },
     key1: {
         name:'Key 1',
+        spriteIndex: 2,
         onUse: (target)=>{
             if (dist1(target.position, {x:31, y:17}) < 6) {
                 map.tiles[17][31] = 5;
                 console.log(`A door opened.`);
                 target.item = 'none';
             } else {
+                alert('Hint: Use the key when the door is on screen.');
                 target.dropItem();
             }
         },
@@ -45,6 +50,7 @@ const itemList = {
     },
     key2: {
         name:'Key 2',
+        spriteIndex: 2,
         onUse: (target)=>{
             if (dist1(target.position, {x:52, y:15}) < 6) {
                 map.tiles[15][52] = 5;
@@ -59,6 +65,7 @@ const itemList = {
     },
     key3: {
         name:'Key 3',
+        spriteIndex: 2,
         onUse: (target)=>{
             if (dist1(target.position, {x:52, y:14}) < 6) {
                 map.tiles[14][52] = 5;
@@ -73,6 +80,7 @@ const itemList = {
     },
     key4: {
         name:'Key 4',
+        spriteIndex: 2,
         onUse: (target)=>{
             if (dist1(target.position, {x:52, y:13}) < 6) {
                 map.tiles[13][52] = 5;
@@ -87,6 +95,7 @@ const itemList = {
     },
     key5: {
         name:'Key 5',
+        spriteIndex: 2,
         onUse: (target)=>{
             if (dist1(target.position, {x:51, y:14}) < 6) {
                 map.tiles[13][51] = 5;
@@ -101,6 +110,7 @@ const itemList = {
     },
     key6: {
         name:'Key 6',
+        spriteIndex: 2,
         onUse: (target)=>{
             if (dist1(target.position, {x:0, y:4}) < 6) {
                 map.tiles[4][0] = 5;

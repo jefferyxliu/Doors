@@ -9,19 +9,57 @@
         border-radius: 8px;
         background-color: grey;
       }
-      #hide {
+      .hide {
         display: none;
         background-color: purple;
+      }
+      #gridDisplay {
+        border: 1pt solid black;
+        border-radius: 8px;
+        padding: 5px;
+        display: grid;
+        grid-template-rows: 2;
+        grid-auto-columns: min-content;
+        width: min-content;
+        gap: 5px;
+      }
+      #StatBox {
+        width: 200px;
+      }
+      #gridButton {
+        border: 1pt solid black;
+        border-radius: 8px;
+        padding: 5px;
+        display: grid;
+        grid-template-rows: 7, 7;
+        grid-auto-columns: 96px;
+        grid-auto-rows: 48px;
+        width: min-content;
       }
   </style>
   </head>
 <body>
-<div id="hide">
+<div class="hide">
     <canvas id="canvas"></canvas>
 </div>
+<div>
+    <div id="gridDisplay">
+        <canvas id="canvas2" width="528px" height="528px"></canvas>
+        <div style="grid-row: 1; grid-column: 2;" id = "StatBox"></div>
+    </div>
+    <div id="gridButton">
+        <input type="button" id="ArrowUp" value="&uarr;" style="grid-row: 1; grid-column: 6;"></input>
+        <input type="button" id="ArrowDown" value="&darr;" style="grid-row: 2; grid-column: 6;"></input>
+        <input type="button" id="ArrowLeft" value="&larr;" style="grid-row: 2; grid-column: 5;"></input>
+        <input type="button" id="ArrowRight" value="&rarr;" style="grid-row: 2; grid-column: 7;"></input>
+        <input type="button" id="KeyZ" value="Drop (Z)" style="grid-row: 1; grid-column: 1;"></input>
+        <input type="button" id="KeyX" value="Pick Up (X)" style="grid-row: 1; grid-column: 2;"></input>
+        <input type="button" id="KeyC" value="Use Item (C)" style="grid-row: 1; grid-column: 3;"></input>
+        <input type="button" id="KeyV" value="Wait (V)" style="grid-row: 1; grid-column: 4;"></input>
+        <input type="button" id="Space" value="Attack (Space)" style="grid-row: 2; grid-column: 1 / 5;"></input>
+    </div>
+</div>
 
-<canvas id="canvas2" width="528px" height="528px"></canvas>
-<div id = "StatBox">
 </div>
 
 <script src = "map.js"></script>
@@ -128,7 +166,7 @@
                 this.image.onload = () => {this.loaded = true};
             }
             document.getElementById('StatBox').innerHTML += 
-                `<div id = "${this.name}-Box"><div id = "${this.name}"></div><canvas id = "${this.name}-HP" height="15" width="100"></canvas></div>`;
+                `<div id = "${this.name}-Box" style="border: 1pt solid black; border-radius: 8px; padding: 5px;"><div id = "${this.name}"></div><canvas id = "${this.name}-HP" height="15" width="100"></canvas></div>`;
         }
 
         isAlive() {
@@ -324,7 +362,10 @@
             this.HPBarCtx = this.HPBar.getContext('2d');
             let s = `${this.name}`;
             if (this.isAlive()) {
-                //s += ` (Next Turn: ${this.actionCounter})`;
+                //s += ` (Next Turn: ${this.actionCounter})`;        
+            }
+            if (this.item != 'none') {
+                s += ` - held item: ${this.getItem().name}`
             }
             this.nameLabel.innerHTML = s;
             const percent = Math.floor(100 * this.HP / this.stat.maxHP);
@@ -486,9 +527,8 @@
                 [0,1,0,0],
                 [1,0,1,1],
                 [0,0,0,0],
-            ], sprite = false, items = []) {
+            ], sprite = false, items = [], itemSprite = false) {
             this.tiles = tiles;
-            this.items = items;
             this.sprite = sprite;
             this.tileSize = 24;
             if (this.sprite) {
@@ -496,6 +536,14 @@
                 this.image.src = `sprites/${this.sprite}.png`;
                 this.loaded = false;
                 this.image.onload = () => {this.loaded = true};
+            }
+            this.items = items;
+            this.itemSprite = itemSprite;
+            if (this.itemSprite) {
+                this.imageItem = new Image(this.tileSize, this.tileSize);
+                this.imageItem.src = `sprites/${this.itemSprite}.png`;
+                this.loadedItem = false;
+                this.imageItem.onload = () => {this.loadedItem = true};
             }
         }
         deleteItem(itemName, coord) {
@@ -560,8 +608,18 @@
             }
             for (const item of this.items) {
                 const coords = screenCoords(item.position);
-                ctx.fillStyle = 'red';
-                ctx.fillRect(coords.x, coords.y, Math.floor(canvas.width / w / 2), Math.floor(canvas.height / h / 2));
+
+                if (this.itemSprite && this.loadedItem && dist1(camera, item.position) < 6) {
+                    const it = itemList[item.name];
+                    let i = 0;
+                    if (Object.hasOwn(it, 'spriteIndex')) {
+                        i = it.spriteIndex;
+                    }
+                    ctx.drawImage(this.imageItem, this.tileSize * i, 0, this.tileSize, this.tileSize, coords.x, coords.y, Math.floor(canvas.width / w), Math.floor(canvas.height / h));
+                } else {
+                    ctx.fillStyle = 'red';
+                    ctx.fillRect(coords.x, coords.y, Math.floor(canvas.width / w / 2), Math.floor(canvas.height / h / 2));
+                }
             }
         }
     }
@@ -578,7 +636,7 @@
             team: 0,
             control: true
         },{
-            x: 29,
+            x: 25,
             y: 17
         }, 'black', 'ArrowRight', 'human', 'none', 24),
 
@@ -722,7 +780,7 @@
                     position: {y:36,x:53}
                 },
                 
-            ]);
+            ], 'items');
 
     const actionQueue = [];
 
@@ -748,12 +806,28 @@
     }
 
     document.addEventListener('keydown', e => {
-        if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Space', 'KeyC', 'KeyX', 'KeyH','KeyV','Digit1','Digit2','Digit3','Digit4'].includes(e.code)) {
+        if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Space', 'KeyC', 'KeyX', 'KeyX', 'KeyH','KeyV','Digit1','Digit2','Digit3','Digit4'].includes(e.code)) {
             actionQueue.push(e.code);
             doStuff();
         }
-     });
+        if (['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) {
+            const aliasKey = {
+                'KeyW': 'ArrowUp',
+                'KeyA': 'ArrowLeft',
+                'KeyS': 'ArrowDown',
+                'KeyD': 'ArrowRight'
+            }
+            actionQueue.push(aliasKey[e.code]);
+            doStuff();
+        }
+    });
     
+    for (const key of ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Space', 'KeyZ', 'KeyX', 'KeyC','KeyV']) {
+        document.getElementById(key).addEventListener('click', (e) => {
+            actionQueue.push(key);
+            doStuff();
+        })
+    }
 
     let iter = 0;
 
@@ -795,6 +869,9 @@
                         }
                         if (code == 'KeyX') {
                             you.pickUpItem();
+                        }
+                        if (code == 'KeyZ') {
+                            you.dropItem();
                         }
                         if (code == 'KeyV') {
                             you.wait();
@@ -838,9 +915,9 @@
         ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
         ctx2.drawImage(canvas, 0, 0, canvas2.width, canvas2.height)
     }
-
+    alert('Your goal is to escape the hotel. Watch out for the entities!');
     setTimeout(doStuff, 500);
-
+    
 </script>
 
 </html>
