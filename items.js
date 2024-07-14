@@ -1,6 +1,6 @@
 const itemList = {
     potionHeal: {
-        name:'Health Potion',
+        name:'Potion of Healing',
         spriteIndex: 1,
         onUse: (target)=>{
             target.heal(20);
@@ -11,7 +11,7 @@ const itemList = {
         description: 'Heals the user by 20 HP.'
     },
     xSpe: {
-        name:'X Speed',
+        name:'Potion of Swiftness',
         spriteIndex: 1,
         onUse: (target)=>{
             target.changeStatStage('spe',10);
@@ -22,7 +22,7 @@ const itemList = {
         description: 'Boosts the user\'s speed for 10 turns.'
     },
     xAtk: {
-        name:'X Atk',
+        name:'Potion of Strength',
         spriteIndex: 1,
         onUse: (target)=>{
             target.changeStatStage('atk',10);
