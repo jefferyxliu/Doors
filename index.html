@@ -1,0 +1,846 @@
+<!doctype html>
+<html lang="en">
+  <title>Doors</title>
+  <head>
+  <meta name="viewport" content="height=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <style>
+      canvas {
+        border: 1pt solid black;
+        border-radius: 8px;
+        background-color: grey;
+      }
+      #hide {
+        display: none;
+        background-color: purple;
+      }
+  </style>
+  </head>
+<body>
+<div id="hide">
+    <canvas id="canvas"></canvas>
+</div>
+
+<canvas id="canvas2" width="528px" height="528px"></canvas>
+<div id = "StatBox">
+</div>
+
+<script src = "map.js"></script>
+<script src = "items.js"></script>
+<script src = "moves.js"></script>
+<script src = "statusEffects.js"></script>
+<script>
+    const canvas = document.getElementById('canvas');
+    const canvas2 = document.getElementById('canvas2');
+    const h = 11;
+    const w = 11;
+    canvas.width = 24 * w;
+    canvas.height = 24 * h;
+    const ctx = canvas.getContext('2d');
+    const ctx2 = canvas2.getContext('2d');
+
+    function randomElement(array) {
+        return array[Math.floor(Math.random() * array.length)];
+    }
+
+    function coordsEq(coords1, coords2) {
+        return coords1.x == coords2.x && coords1.y == coords2.y;
+    }
+
+    function addCoords(coords1, coords2) {
+        return {
+            x: coords1.x + coords2.x,
+            y: coords1.y + coords2.y
+        }
+    }
+
+    function subCoords(coords1, coords2) {
+        return {
+            x: coords1.x - coords2.x,
+            y: coords1.y - coords2.y
+        }
+    }
+
+    function rotate(direction, coord) {
+        const cos = {
+            'ArrowRight': 1,
+            'ArrowUp': 0,
+            'ArrowLeft': -1,
+            'ArrowDown': 0
+        }
+        const sin = {
+            'ArrowRight': 0,
+            'ArrowUp': -1,
+            'ArrowLeft': 0,
+            'ArrowDown': 1
+        }
+        return {
+            x: cos[direction] * coord.x - sin[direction] * coord.y,
+            y: sin[direction] * coord.x + cos[direction] * coord.y
+        }
+    }
+
+    function approxDir(coords) {
+        return ['ArrowRight','ArrowDown','ArrowLeft','ArrowUp'][(Math.round(2 * Math.atan2(coords.y, coords.x) / Math.PI + 1.5) + 2) % 4];
+    }
+
+    function dist(coords1, coords2) {
+        //taxicab distance
+        return Math.abs(coords1.x - coords2.x) + Math.abs(coords1.y - coords2.y);
+    }
+    
+    function dist1(coords1, coords2) {
+        //sup distance
+        return Math.max(Math.abs(coords1.x - coords2.x), Math.abs(coords1.y - coords2.y));
+    }
+
+    function screenCoords(coords) {
+        return {
+            x: (coords.x - you.position.x + Math.floor(w/2)) * Math.floor(canvas.width / w),
+            y: (coords.y - you.position.y + Math.floor(h/2)) * Math.floor(canvas.height / h)
+        }
+    }
+
+    class Entity {
+        
+        constructor(name, stat, position, color = 'black', direction = 'ArrowRight', sprite = false, item = 'none', size = 24) {
+            this.name = name;
+            this.stat = stat;
+            this.HP = this.stat.maxHP;
+            this.position = position;
+            this.startPosition = position;
+            this.direction = direction;
+            this.color = color;
+            this.actionCounter = 0;
+            this.moveset = [
+                'moveTackle',
+                'moveHyperBeam',
+                'moveSwordsDance',
+                'moveQuickAttack'
+            ];
+            this.item = item;
+            this.statusEffects = [];
+            this.sprite = sprite;
+            this.size = size;
+            if (this.sprite) {
+                this.image = new Image(this.size, this.size);
+                this.image.src = `sprites/${this.sprite}.png`;
+                this.loaded = false;
+                this.image.onload = () => {this.loaded = true};
+            }
+            document.getElementById('StatBox').innerHTML += 
+                `<div id = "${this.name}-Box"><div id = "${this.name}"></div><canvas id = "${this.name}-HP" height="15" width="100"></canvas></div>`;
+        }
+
+        isAlive() {
+            return this.HP > 0;
+        }
+
+        getItem() {
+            return itemList[this.item];
+        }
+
+        wait() {
+            this.applyCooldown();
+            console.log(this.name, 'wait');
+        }
+
+        changeStatStage(stat, addTurns = 10) {
+
+            const i = this.statusEffects.findIndex((status)=>{return status.name == `${stat}Up`});
+            const j = this.statusEffects.findIndex((status)=>{return status.name == `${stat}Down`});
+            let newTurns = addTurns;
+            if (i != -1) {
+                newTurns += this.statusEffects[i].turns;
+            }
+            if (j != -1) {
+                newTurns -= this.statusEffects[j].turns;
+            }
+            this.statusEffects = this.statusEffects.filter((status)=>{return !(status.name == `${stat}Up` || status.name == `${stat}Down`)});
+            if (newTurns > 0) {
+                this.statusEffects.push({name:`${stat}Up`, turns: newTurns});
+            }
+            if (newTurns < 0) {
+                this.statusEffects.push({name:`${stat}Down`, turns: -newTurns});
+            }
+        }
+
+        modifyStat(stat, baseValue) {
+            let value = baseValue;
+            if (this.item != 'none') {
+                const item = this.getItem();
+                if (Object.hasOwn(item, `${stat}StatModifier`)) {
+                    value *= item[`${stat}StatModifier`];
+                };
+            }
+            for (const status of this.statusEffects) {
+                const st = statusList[status.name];
+                if (Object.hasOwn(st, `${stat}StatModifier`)) {
+                    value *= st[`${stat}StatModifier`];
+                };
+            }
+            return Math.max(Math.floor(value), 1);
+        }
+
+        applyCooldown() {
+            this.actionCounter += this.modifyStat('cooldown', this.stat.cooldown);
+        }
+
+        move(code) {
+            if (code == this.direction) {
+                const target = this.getTarget()
+                if (!target) {
+                    this.position = addCoords(this.position, controls[code]);
+                    this.applyCooldown();
+                    console.log(this.name, 'move');
+                } else {
+                    if (target != 'wall') {
+                        if (target.stat.team == this.stat.team) {
+                            this.switch(target);
+                        } else {
+                            this.wait();
+                        }
+                    } else {
+                        this.wait();
+                    }
+                }
+            } else {
+                this.direction = code;
+            }
+        }
+
+        switch(target) {
+            const p = target.position;
+            target.position = this.position;
+            this.position = p;
+        }
+
+        useMove(n = 0) {
+            moveList[this.moveset[n]].onUse(this);
+        }
+
+        getTarget() {
+            const fr = addCoords(this.position, controls[this.direction]);
+            if (map.isWall(fr, this.stat.solidTiles)) {
+                return 'wall';
+            } else {
+                const s = spriteList.filter((sprite) => 
+                    coordsEq(sprite.position, fr) && sprite.isAlive()
+                );
+                if (s.length > 0) {
+                    return s[0];
+                } else {
+                    return false;
+                }
+            }
+        }
+
+        getTargetSprites() {
+            const fr = addCoords(this.position, controls[this.direction]);
+            return spriteList.filter((sprite) => 
+                coordsEq(sprite.position, fr) && sprite.isAlive()
+            );
+        }
+
+        getAdjacentSprites() {
+            return spriteList.filter((sprite) => 
+                dist(sprite.position, this.position) == 1 && sprite.isAlive()
+            );
+        }
+
+        getNearbySprites(n) {
+            return spriteList.filter((sprite) => {
+                const d = dist(sprite.position, this.position);
+                return d <= n && d > 0 && sprite.isAlive();
+            });
+        }
+
+        getFrontSprites(tilePattern) {
+            return spriteList.filter((sprite) => {
+                return tilePattern.some((tile) => {
+                    return coordsEq(sprite.position, addCoords(this.position, rotate(this.direction, tile)))
+                }) && sprite.isAlive();
+            });
+        }
+
+        pickUpItem() {
+            if (this.isAlive() && this.item == 'none') {
+                this.item = map.getItem(this.position);
+                console.log(`${this.name} picked up ${this.item}`);
+            }
+        }
+
+        dropItem() {
+            if (this.item != 'none') {
+                map.spawnItem(this.item, this.position);
+                console.log(`${this.name} dropped ${this.item}`);
+                this.item = 'none';
+            }
+        }
+
+        useItem() {
+            if (this.isAlive() && this.item != 'none') {
+                console.log(`${this.name} used ${this.item}`);
+                itemList[this.item].onUse(this);
+            } else {
+                this.wait();
+            }
+        }
+
+        heal(amount) {
+            if (this.isAlive()) {
+                this.HP = Math.min(this.stat.maxHP, this.HP + amount);
+                console.log(`${this.name} restored ${amount} HP.`);
+            }
+        }
+
+        damage(amount) {
+            if (this.isAlive()) {
+                this.HP = Math.max(0, this.HP - amount);
+                console.log(`${this.name} took ${amount} damage.`);
+            }
+        }
+
+        endTurn() {
+            if (this.item != 'none') {
+                const it = itemList[this.item];
+                if (it.hasEndEffect) {
+                    it.onTurnEnd(this);
+                }
+            }
+            for (const status of this.statusEffects) {
+                const st = statusList[status.name];
+                if (st.hasEndEffect) {
+                    st.onTurnEnd(this);
+                }
+                status.turns--;
+            }
+            this.statusEffects = this.statusEffects.filter((status)=>{return status.turns > 0});
+        }
+
+        printTo(hidden = false) {
+            this.nameBox = document.getElementById(`${this.name}-Box`);
+            this.nameLabel = document.getElementById(this.name);
+            this.HPBar = document.getElementById(`${this.name}-HP`);
+            this.HPBarCtx = this.HPBar.getContext('2d');
+            let s = `${this.name}`;
+            if (this.isAlive()) {
+                //s += ` (Next Turn: ${this.actionCounter})`;
+            }
+            this.nameLabel.innerHTML = s;
+            const percent = Math.floor(100 * this.HP / this.stat.maxHP);
+            this.HPBarCtx.clearRect(0, 0, 100, 15);
+            this.HPBarCtx.fillStyle = ['red','yellow','green'][0 + (percent >= 20) + (percent >= 50)];
+            this.HPBarCtx.fillRect(0, 0, percent, 15);
+            this.HPBarCtx.fillStyle = 'black';
+            this.HPBarCtx.font = "bold 14px Arial";
+            this.HPBarCtx.fillText(`${this.HP}/${this.stat.maxHP}`, 5, 13);
+            if (hidden) {
+                this.nameBox.style.display = 'none';
+            } else {
+                this.nameBox.style.display = 'block';
+            }
+        }
+
+        draw() {
+            const coords = screenCoords(this.position);
+            if (this.sprite && this.loaded) {
+                ctx.drawImage(this.image, this.size * arrowNumber[this.direction], 0, this.size, this.size, coords.x, coords.y, Math.floor(canvas.width / w), Math.floor(canvas.height / h));
+            } else {
+                ctx.fillStyle = this.color;
+                ctx.fillRect(coords.x, coords.y, Math.floor(canvas.width / w), Math.floor(canvas.height / h));
+            }
+        }
+
+        turnToward(position) {
+            this.direction = approxDir(subCoords(position, this.position));
+        }
+
+        smartGetDistance(targetPosition) {
+            const distances = {
+                'ArrowRight': Infinity,
+                'ArrowLeft': Infinity,
+                'ArrowUp': Infinity,
+                'ArrowDown': Infinity,
+            };
+            for (const direction in distances) {
+                const fr = addCoords(this.position, controls[direction]);
+                if (!map.isWall(fr, this.stat.solidTiles)) {
+                    distances[direction] = dist(fr, targetPosition);
+                }
+            }
+            const d = Object.values(distances);
+            d.push(dist(this.position, targetPosition));
+            const m = Math.min(...d);
+            return ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].filter((direction) => distances[direction] == m);
+        }
+
+        AIMove() {
+            if (this.isAlive()) {
+                if (this.stat.nature == 'attack') {
+                    let targets = spriteList.filter((sprite)=>{return sprite.stat.team != this.stat.team && sprite.isAlive()});
+                    if (targets.length > 0) {
+                        const target = targets.toSorted((sprite1, sprite2)=> dist(this.position, sprite1.position) - dist(this.position, sprite2.position))[0];
+                        this.turnToward(target.position);
+                        const d = dist(this.position, target.position);
+                        const d1 = dist1(this.position, target.position);
+                        if (d == 1) {
+                            moveList.moveTackle.onUse(this);
+                        } else {
+                            if (d > 1 && d1 < 9) {
+                                const s = this.smartGetDistance(addCoords(target.position, controls[opposite[target.direction]]));
+                                //console.log(s);
+                                if (s.length > 0) {
+                                    this.direction = randomElement(s);
+                                    this.move(this.direction);
+                                } else {
+                                    const s = this.smartGetDistance(this.startPosition);
+                                    if (s.length > 0) {
+                                        this.direction = randomElement(s);
+                                        this.move(this.direction);
+                                    } else {
+                                        this.wait();
+                                    }
+                                }
+                            } else {
+                                const s = this.smartGetDistance(this.startPosition);
+                                if (s.length > 0) {
+                                    this.direction = randomElement(s);
+                                    this.move(this.direction);
+                                } else {
+                                    this.wait();
+                                }
+                            }
+                        }
+                    } else {
+                        const s = this.smartGetDistance(this.startPosition);
+                            if (s.length > 0) {
+                                this.direction = randomElement(s);
+                                this.move(this.direction);
+                            } else {
+                            this.wait();
+                        }
+                    }
+                }
+                if (this.stat.nature == 'wander') {
+                    let targets = spriteList.filter((sprite)=>{return sprite.stat.team != this.stat.team && dist1(this.position, sprite.position) < 10 && !map.isHidden(sprite.position) && sprite.isAlive()});
+                    if (targets.length > 0) {
+                        const target = targets.toSorted((sprite1, sprite2)=> dist(this.position, sprite1.position) - dist(this.position, sprite2.position))[0];
+                        this.turnToward(target.position);
+                        this.stat.nature = 'attack';
+                        this.wait();
+                    } else {
+                        this.direction = randomElement(['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'])
+                        if (this.getTarget()) {
+                            this.direction = opposite[this.direction];
+                        }
+                        this.move(this.direction);
+                    }
+                }
+                if (this.stat.nature == 'back and forth') {
+                    let targets = spriteList.filter((sprite)=>{return sprite.stat.team != this.stat.team && dist(this.position, sprite.position) == 1 && !map.isHidden(sprite.position) && sprite.isAlive()});
+                    if (targets.length > 0) {
+                        this.turnToward(targets[0].position);
+                        this.stat.nature = 'attack';
+                        moveList.moveTackle.onUse(this);
+                    } else {
+                        if (this.getTarget()) {
+                            this.direction = opposite[this.direction];
+                        }
+                        this.move(this.direction);
+                    }
+                }
+                if (this.stat.nature == 'follow team') {
+                    let targets = spriteList.filter((sprite) => {return sprite.stat.team == this.stat.team && sprite.isAlive() && sprite.name != this.name && sprite.stat.control == true});
+                    
+                    if (targets.length > 0) {
+                        const target = targets.toSorted((sprite1, sprite2)=> dist(this.position, sprite1.position) - dist(this.position, sprite2.position))[0];
+                        this.turnToward(target.position);
+                        const d = dist(this.position, target.position);
+                        const d1 = dist1(this.position, target.position);
+                        if (d == 1) {
+                            this.wait();
+                        } else {
+                            if (d > 1 && d1 < 10) {
+                                const s = this.smartGetDistance(addCoords(target.position, controls[opposite[target.direction]]));
+                                //console.log(s);
+                                if (s.length > 0) {
+                                    this.direction = randomElement(s);
+                                    this.move(this.direction);
+                                } else {
+                                    this.wait();
+                                }
+                            } else {
+                                this.wait();
+                            }
+                        }
+                    } else {
+                        this.wait();
+                    }
+                }
+            }
+        }
+    }
+
+    class Map {
+        constructor(tiles = [
+                [0,1,0,0],
+                [1,0,1,1],
+                [0,0,0,0],
+            ], sprite = false, items = []) {
+            this.tiles = tiles;
+            this.items = items;
+            this.sprite = sprite;
+            this.tileSize = 24;
+            if (this.sprite) {
+                this.image = new Image(this.tileSize, this.tileSize);
+                this.image.src = `sprites/${this.sprite}.png`;
+                this.loaded = false;
+                this.image.onload = () => {this.loaded = true};
+            }
+        }
+        deleteItem(itemName, coord) {
+            const i = this.items.findIndex((item)=>{return item.name == itemName && coordsEq(coord, item.position)});
+            if (i != -1) {
+                this.items.splice(i,1);
+            }
+        }
+
+        spawnItem(itemName, coord) {
+            this.items.push({
+                name: itemName,
+                position: coord
+            })
+        }
+
+        getItem(coord) {
+            let a = this.items.filter((item)=>{return coordsEq(item.position, coord)});
+            if (a.length > 0) {
+                const picked = a[0].name;
+                this.deleteItem(picked, coord);
+                return picked;
+            } else {
+                return 'none';
+            }
+        }
+
+        inRange(coord) {
+            return coord.x >= 0 && coord.y >= 0 && coord.x < this.tiles[0].length && coord.y < this.tiles.length;
+        }
+
+        isWall(coord, solidTiles = [1, 2]) {
+            if (this.inRange(coord)) {
+                return solidTiles.includes(this.tiles[coord.y][coord.x]);
+            }
+            else {
+                return false;
+            }
+        }
+
+        isHidden(coord, hiddenTiles = [3]) {
+            if (this.inRange(coord)) {
+                return hiddenTiles.includes(this.tiles[coord.y][coord.x]);
+            }
+            else {
+                return false;
+            }
+        }
+
+        draw(camera) {
+            for (let i = 0; i < this.tiles.length; i++) {
+                for (let j = 0; j < this.tiles[i].length; j++) {
+                    const coords = screenCoords({x: j, y: i});
+                    if (this.tiles[i][j]) {
+                        ctx.fillStyle = this.color;
+                        ctx.fillRect(coords.x, coords.y, Math.floor(canvas.width / w), Math.floor(canvas.height / h));
+                    }
+                    if (this.sprite && this.loaded && dist1(camera, {x: j, y: i}) < 6) {
+                        ctx.drawImage(this.image, this.tileSize * this.tiles[i][j], 0, this.tileSize, this.tileSize, coords.x, coords.y, Math.floor(canvas.width / w), Math.floor(canvas.height / h));
+                    }
+                }
+            }
+            for (const item of this.items) {
+                const coords = screenCoords(item.position);
+                ctx.fillStyle = 'red';
+                ctx.fillRect(coords.x, coords.y, Math.floor(canvas.width / w / 2), Math.floor(canvas.height / h / 2));
+            }
+        }
+    }
+
+    let spriteList = [
+        new Entity('You',
+        {
+            maxHP: 10,
+            atk: 10,
+            def: 10,
+            cooldown: 12,
+            nature: 'attack',
+            solidTiles: [1,2,4,6,7],
+            team: 0,
+            control: true
+        },{
+            x: 29,
+            y: 17
+        }, 'black', 'ArrowRight', 'human', 'none', 24),
+
+        new Entity('Random Noob',
+        {
+            maxHP: 10,
+            atk: 10,
+            def: 10,
+            cooldown: 12,
+            nature: 'follow team',
+            solidTiles: [1,2,4,6,7],
+            team: 0,
+            control: false
+        },{
+            x: 53,
+            y: 17
+        }, 'black', 'ArrowRight', 'human2'),
+
+/*         new Entity('You 3',
+        {
+            maxHP: 10,
+            atk: 10,
+            def: 10,
+            cooldown: 6,
+            nature: 'follow team',
+            solidTiles: [1,2],
+            team: 0,
+            control: false
+        },{
+            x: 2,
+            y: 7
+        }, 'black', 'ArrowRight', 'human2'), */
+
+        new Entity('Figure',{
+            maxHP: 50,
+            atk: 25,
+            def: 20,
+            cooldown: 16,
+            nature: 'attack',
+            solidTiles: [1,2,3,4,7],
+            team: 1
+        }, {
+            x: 44,
+            y: 29
+        }, 'brown', 'ArrowRight', 'figure'),
+
+        new Entity('Rush 2',{
+            maxHP: 10,
+            atk: 4,
+            def: 15,
+            cooldown: 8,
+            nature: 'back and forth',
+            solidTiles: [1,2,3,4,7],
+            team: 1
+        }, {
+            x: 25,
+            y: 11
+        }, 'brown', 'ArrowRight', 'rush', 'key6', 24),
+
+        new Entity('Rush 1',{
+            maxHP: 10,
+            atk: 4,
+            def: 15,
+            cooldown: 8,
+            nature: 'back and forth',
+            solidTiles: [1,2,3,4,7],
+            team: 1
+        }, {
+            x: 29,
+            y: 29
+        }, 'brown', 'ArrowUp', 'rush'),
+
+        new Entity('Seek',{
+            maxHP: 20,
+            atk: 5,
+            def: 15,
+            cooldown: 11,
+            nature: 'attack',
+            solidTiles: [1,2,3,4,7],
+            team: 1
+        }, {
+            x: 48,
+            y: 1
+        }, 'brown', 'ArrowRight', 'seek'),
+
+        new Entity('Ambush',{
+            maxHP: 15,
+            atk: 3,
+            def: 15,
+            cooldown: 4,
+            nature: 'back and forth',
+            solidTiles: [1,2,3,4,7],
+            team: 1
+        }, {
+            x: 39,
+            y: 13
+        }, 'brown', 'ArrowRight', 'ambush')
+    ];
+
+    let you = spriteList[0];
+
+    const map = new Map(mapTiles, 'map2', [
+                {
+                    name:'xAtk',
+                    position: {y:4,x:4}
+                },
+                {
+                    name:'potionHeal',
+                    position: {y:4,x:3}
+                },
+                {
+                    name:'potionHeal',
+                    position: {y:13,x:49}
+                },
+                {
+                    name:'potionHeal',
+                    position: {y:10,x:51}
+                },
+                {
+                    name:'xSpe',
+                    position: {y:10,x:52}
+                },
+                {
+                    name:'key1',
+                    position: {y:35,x:29}
+                },
+                {
+                    name:'key2',
+                    position: {y:30,x:37}
+                },
+                {
+                    name:'key3',
+                    position: {y:20,x:50}
+                },
+                {
+                    name:'key4',
+                    position: {y:27,x:53}
+                },
+                {
+                    name:'key5',
+                    position: {y:36,x:53}
+                },
+                
+            ]);
+
+    const actionQueue = [];
+
+    const controls = {
+        'ArrowRight': {x: 1, y: 0},
+        'ArrowLeft': {x: -1, y: 0},
+        'ArrowUp': {x: 0, y: -1},
+        'ArrowDown': {x: 0, y: 1},
+    }
+
+    const arrowNumber = {
+        'ArrowRight': 1,
+        'ArrowLeft': 3,
+        'ArrowUp': 0,
+        'ArrowDown': 2,
+    }
+
+    const opposite = {
+        'ArrowRight': 'ArrowLeft',
+        'ArrowLeft': 'ArrowRight',
+        'ArrowUp': 'ArrowDown',
+        'ArrowDown': 'ArrowUp',
+    }
+
+    document.addEventListener('keydown', e => {
+        if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Space', 'KeyC', 'KeyX', 'KeyH','KeyV','Digit1','Digit2','Digit3','Digit4'].includes(e.code)) {
+            actionQueue.push(e.code);
+            doStuff();
+        }
+     });
+    
+
+    let iter = 0;
+
+    function doStuff() {
+        const sprite = spriteList[iter];
+        if (!sprite.isAlive()) {
+            sprite.dropItem();
+            spriteList.splice(iter, 1);
+            iter = iter % spriteList.length;
+            drawEverything(you.position);
+            setTimeout(doStuff, 0);
+        } else {
+            sprite.actionCounter--;
+            if (sprite.actionCounter <= 0 && sprite.isAlive()) {
+                if (sprite.stat.control) {
+                    you = sprite;
+                    if (actionQueue.length == 0) {
+                        sprite.actionCounter++;
+                        drawEverything(you.position);
+                        return true;
+                    } else {
+                        const code = actionQueue[0];
+                        if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(code)) {
+                            you.move(code);
+                        }
+                        if (code == 'Space') {
+                            moveList.moveTackle.onUse(you);
+                            //you.attack(you.getTarget(), 5);
+                        }
+                        if (['Digit1', 'Digit2', 'Digit3', 'Digit4'].includes(code)) {
+                            const n = {'Digit1':0, 'Digit2':1, 'Digit3':2, 'Digit4':3}
+                            you.useMove(n[code]);
+                        }
+                        if (code == 'KeyH') {
+                            you.heal(1);
+                        }
+                        if (code == 'KeyC') {
+                            you.useItem();
+                        }
+                        if (code == 'KeyX') {
+                            you.pickUpItem();
+                        }
+                        if (code == 'KeyV') {
+                            you.wait();
+                        }
+                        actionQueue.splice(0,1);
+
+                        if (sprite.actionCounter > 0) {
+                            sprite.endTurn();
+                            iter = (iter + 1) % spriteList.length;
+                        } else {
+                            sprite.actionCounter++;
+                        }
+                        drawEverything(you.position);
+                        setTimeout(doStuff, 500);
+                    }
+                } else {
+                    sprite.AIMove();
+                    drawEverything(you.position);
+                    if (sprite.actionCounter > 0) {
+                        sprite.endTurn();
+                        iter = (iter + 1) % spriteList.length;
+                    }
+                    setTimeout(doStuff,10);
+                }
+            } else {
+                iter = (iter + 1) % spriteList.length;
+                setTimeout(doStuff,0);
+            }
+        }        
+    }
+
+    function drawEverything(camera) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        map.draw(camera);
+        spriteList.forEach(sprite => {
+            if (sprite.isAlive() && !map.isHidden(sprite.position)) {
+                sprite.draw();
+            };
+            sprite.printTo(dist1(sprite.position, camera) > 5 || !sprite.isAlive());
+        });
+        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+        ctx2.drawImage(canvas, 0, 0, canvas2.width, canvas2.height)
+    }
+
+    setTimeout(doStuff, 500);
+
+</script>
+
+</html>

@@ -1,0 +1,144 @@
+const itemList = {
+    potionHeal: {
+        name:'Health Potion',
+        onUse: (target)=>{
+            target.heal(20);
+            target.item = 'none';
+            target.applyCooldown();
+            return true;
+        },
+        description: 'Heals the user by 20 HP.'
+    },
+    xSpe: {
+        name:'X Speed',
+        onUse: (target)=>{
+            target.changeStatStage('spe',10);
+            target.item = 'none';
+            target.applyCooldown();
+            return true;
+        },
+        description: 'Boosts the user\'s speed for 10 turns.'
+    },
+    xAtk: {
+        name:'X Atk',
+        onUse: (target)=>{
+            target.changeStatStage('atk',10);
+            target.item = 'none';
+            target.applyCooldown();
+            return true;
+        },
+        description: 'Boosts the user\'s attack for 10 turns.'
+    },
+    key1: {
+        name:'Key 1',
+        onUse: (target)=>{
+            if (dist1(target.position, {x:31, y:17}) < 6) {
+                map.tiles[17][31] = 5;
+                console.log(`A door opened.`);
+                target.item = 'none';
+            } else {
+                target.dropItem();
+            }
+        },
+        cooldownStatModifier: 12/10,
+        description: 'Opens a certain door.'
+    },
+    key2: {
+        name:'Key 2',
+        onUse: (target)=>{
+            if (dist1(target.position, {x:52, y:15}) < 6) {
+                map.tiles[15][52] = 5;
+                console.log(`A door opened.`);
+                target.item = 'none';
+            } else {
+                target.dropItem();
+            }
+        },
+        cooldownStatModifier: 12/10,
+        description: 'Opens a certain door.'
+    },
+    key3: {
+        name:'Key 3',
+        onUse: (target)=>{
+            if (dist1(target.position, {x:52, y:14}) < 6) {
+                map.tiles[14][52] = 5;
+                console.log(`A door opened.`);
+                target.item = 'none';
+            } else {
+                target.dropItem();
+            }
+        },
+        cooldownStatModifier: 12/10,
+        description: 'Opens a certain door.'
+    },
+    key4: {
+        name:'Key 4',
+        onUse: (target)=>{
+            if (dist1(target.position, {x:52, y:13}) < 6) {
+                map.tiles[13][52] = 5;
+                console.log(`A door opened.`);
+                target.item = 'none';
+            } else {
+                target.dropItem();
+            }
+        },
+        cooldownStatModifier: 12/10,
+        description: 'Opens a certain door.'
+    },
+    key5: {
+        name:'Key 5',
+        onUse: (target)=>{
+            if (dist1(target.position, {x:51, y:14}) < 6) {
+                map.tiles[13][51] = 5;
+                console.log(`A door opened.`);
+                target.item = 'none';
+            } else {
+                target.dropItem();
+            }
+        },
+        cooldownStatModifier: 12/10,
+        description: 'Opens a certain door.'
+    },
+    key6: {
+        name:'Key 6',
+        onUse: (target)=>{
+            if (dist1(target.position, {x:0, y:4}) < 6) {
+                map.tiles[4][0] = 5;
+                console.log(`A door opened.`);
+                target.item = 'none';
+            } else {
+                target.dropItem();
+            }
+        },
+        cooldownStatModifier: 12/10,
+        description: 'Opens a certain door.'
+    },
+    leftovers: {
+        name: 'Leftovers',
+        onUse: (target)=>{
+            target.dropItem();
+        },
+        hasEndEffect: true,
+        onTurnEnd: (target)=>{
+            target.heal(Math.floor(target.stat.maxHP / 16));
+            console.log(`${target.name} healed with Leftovers`);
+        },
+        description: 'Heals the holder a little bit at the end of every turn.'
+    },
+    runningShoes: {
+        name:'Running Shoes',
+        onUse: (target)=>{
+            target.dropItem();
+        },
+        cooldownStatModifier: 2/3,
+        description: 'Makes the holder faster.'
+    },
+    ironBall: {
+        name:'Iron Ball',
+        onUse: (target)=>{
+            target.dropItem();
+        },
+        cooldownStatModifier: 3/2,
+        description: 'Makes the holder slower.'
+    },
+}
