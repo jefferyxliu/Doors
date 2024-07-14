@@ -157,16 +157,28 @@
             ];
             this.item = item;
             this.statusEffects = [];
+
+            document.getElementById('StatBox').innerHTML += 
+                `<div id = "${this.name}-Box" style="border: 1pt solid black; border-radius: 8px; padding: 5px;">\
+                    <div id = "${this.name}"></div>\
+                    <canvas id = "${this.name}-Sprite" height="24px" width="24px" style="border: none; background-color: transparent;"></canvas>\
+                    <canvas id = "${this.name}-HP" height="15" width="100"></canvas>\
+                </div>`;
+
+
             this.sprite = sprite;
             this.size = size;
             if (this.sprite) {
                 this.image = new Image(this.size, this.size);
                 this.image.src = `sprites/${this.sprite}.png`;
                 this.loaded = false;
-                this.image.onload = () => {this.loaded = true};
+                this.image.onload = () => {
+                    this.loaded = true;
+                    this.spriteBox = document.getElementById(`${this.name}-Sprite`);
+                    this.spriteBoxCtx = this.spriteBox.getContext('2d');
+                    this.spriteBoxCtx.drawImage(this.image, this.size * 2, 0, this.size, this.size, 0, 0, 24, 24);
+                };
             }
-            document.getElementById('StatBox').innerHTML += 
-                `<div id = "${this.name}-Box" style="border: 1pt solid black; border-radius: 8px; padding: 5px;"><div id = "${this.name}"></div><canvas id = "${this.name}-HP" height="15" width="100"></canvas></div>`;
         }
 
         isAlive() {
@@ -915,7 +927,7 @@
         ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
         ctx2.drawImage(canvas, 0, 0, canvas2.width, canvas2.height)
     }
-    alert('Your goal is to escape the hotel. Watch out for the entities!');
+    //alert('Your goal is to escape the hotel. Watch out for the entities!');
     setTimeout(doStuff, 500);
     
 </script>
