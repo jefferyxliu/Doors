@@ -18,23 +18,42 @@
         border-radius: 8px;
         padding: 5px;
         display: grid;
-        grid-template-rows: 2;
+        grid-template-rows: 2, 2;
         grid-auto-columns: min-content;
         width: min-content;
         gap: 5px;
       }
       #StatBox {
+        overflow: scroll;
+        background-color: purple;
         width: 200px;
       }
-      #gridButton {
+      #gridDisplay2 {
         border: 1pt solid black;
         border-radius: 8px;
         padding: 5px;
         display: grid;
-        grid-template-rows: 7, 7;
+        grid-template-rows: 2, 2;
+        grid-auto-columns: min-content;
+        width: min-content;
+        gap: 5px;
+        bottom: 0;
+        position: fixed;
+      }
+      #gridButton {
+        display: grid;
+        grid-template-rows: 4, 4;
         grid-auto-columns: 80px;
         grid-auto-rows: 38px;
         width: min-content;
+      }
+      #gridButton2 {
+        display: grid;
+        grid-template-rows: 3, 3;
+        grid-auto-columns: 38px;
+        grid-auto-rows: 38px;
+        width: min-content;
+        justify-self: center;
       }
       input {
         font-size: 12px;
@@ -50,16 +69,20 @@
         <canvas id="canvas2" width="device-width" height="device-width"></canvas>
         <div style="grid-row: 1; grid-column: 2;" id = "StatBox"></div>
     </div>
-    <div id="gridButton">
-        <input type="button" id="ArrowUp" value="&uarr;" style="grid-row: 1; grid-column: 6;"></input>
-        <input type="button" id="ArrowDown" value="&darr;" style="grid-row: 2; grid-column: 6;"></input>
-        <input type="button" id="ArrowLeft" value="&larr;" style="grid-row: 2; grid-column: 5;"></input>
-        <input type="button" id="ArrowRight" value="&rarr;" style="grid-row: 2; grid-column: 7;"></input>
-        <input type="button" id="KeyZ" value="Drop (Z)" style="grid-row: 1; grid-column: 1;"></input>
-        <input type="button" id="KeyX" value="Pick Up (X)" style="grid-row: 1; grid-column: 2;"></input>
-        <input type="button" id="KeyC" value="Use Item (C)" style="grid-row: 1; grid-column: 3;"></input>
-        <input type="button" id="KeyV" value="Wait (V)" style="grid-row: 1; grid-column: 4;"></input>
-        <input type="button" id="Space" value="Attack (Space)" style="grid-row: 2; grid-column: 1 / 5;"></input>
+    <div id="gridDisplay2">
+        <div id="gridButton">
+            <input type="button" id="KeyZ" value="Drop (Z)" style="grid-row: 1; grid-column: 1;"></input>
+            <input type="button" id="KeyX" value="Pick Up (X)" style="grid-row: 1; grid-column: 2;"></input>
+            <input type="button" id="KeyC" value="Use Item (C)" style="grid-row: 1; grid-column: 3;"></input>
+            <input type="button" id="KeyV" value="Wait (V)" style="grid-row: 1; grid-column: 4;"></input>
+            <input type="button" id="Space" value="Attack (Space)" style="grid-row: 2; grid-column: 1 / 5;"></input>
+        </div>
+        <div id="gridButton2">
+            <input type="button" id="ArrowUp" value="&uarr;" style="grid-row: 1; grid-column: 2;"></input>
+            <input type="button" id="ArrowDown" value="&darr;" style="grid-row: 2; grid-column: 2;"></input>
+            <input type="button" id="ArrowLeft" value="&larr;" style="grid-row: 2; grid-column: 1;"></input>
+            <input type="button" id="ArrowRight" value="&rarr;" style="grid-row: 2; grid-column: 3;"></input>
+        </div>
     </div>
 </div>
 
@@ -80,9 +103,35 @@
     const ctx2 = canvas2.getContext('2d');
 
     function resize() {
-        const m = Math.min(window.innerHeight - 120, window.innerWidth - 230);
-        canvas2.width = m;
-        canvas2.height = m;
+        const statBox = document.getElementById('StatBox');
+        const arrowButtons = document.getElementById('gridButton2');
+        let verticalMargin = 120;
+        let horizontalMargin = 230;
+        if (window.innerWidth > 455) {
+            arrowButtons.style.gridRow = 1;
+            arrowButtons.style.gridColumn = 2;
+        } else {
+            arrowButtons.style.gridRow = 2;
+            arrowButtons.style.gridColumn = 1;
+            verticalMargin += 80;
+        }
+        if (window.innerWidth > window.innerHeight) {
+            statBox.style.gridRow = 1;
+            statBox.style.gridColumn = 2;
+            const m = Math.min(window.innerHeight - verticalMargin, window.innerWidth - horizontalMargin);
+            canvas2.width = m;
+            canvas2.height = m;
+            statBox.style.height = `${m}px`;
+        } else {
+            statBox.style.gridRow = 2;
+            statBox.style.gridColumn = 1;
+            verticalMargin += 58;
+            horizontalMargin -= 200;
+            const m = Math.min(window.innerHeight - verticalMargin, window.innerWidth - horizontalMargin);
+            canvas2.width = m;
+            canvas2.height = m;
+            statBox.style.height = `${window.innerHeight - m - verticalMargin + 58}px`;
+        }
         drawEverything(you.position);
     }
 
