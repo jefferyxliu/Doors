@@ -458,10 +458,11 @@
             const coords = screenCoords(this.position);
             if (this.sprite && this.loaded) {
                 ctx.drawImage(this.image, this.size * arrowNumber[this.direction], 0, this.size, this.size, coords.x, coords.y, Math.floor(canvas.width / w), Math.floor(canvas.height / h));
-            } else {
+            } 
+/*             else {
                 ctx.fillStyle = this.color;
                 ctx.fillRect(coords.x, coords.y, Math.floor(canvas.width / w), Math.floor(canvas.height / h));
-            }
+            } */
         }
 
         turnToward(position) {
@@ -666,16 +667,23 @@
         }
 
         draw(camera) {
+            if (!(this.loaded)) {
+                ctx.fillStyle = 'black';
+                ctx.font = "bold 24px monospace";
+                ctx.fillText('Loading...', 5, 25)
+            }
             for (let i = 0; i < this.tiles.length; i++) {
                 for (let j = 0; j < this.tiles[i].length; j++) {
                     const coords = screenCoords({x: j, y: i});
-                    if (this.tiles[i][j]) {
-                        ctx.fillStyle = this.color;
-                        ctx.fillRect(coords.x, coords.y, Math.floor(canvas.width / w), Math.floor(canvas.height / h));
-                    }
                     if (this.sprite && this.loaded && dist1(camera, {x: j, y: i}) < 6) {
                         ctx.drawImage(this.image, this.tileSize * this.tiles[i][j], 0, this.tileSize, this.tileSize, coords.x, coords.y, Math.floor(canvas.width / w), Math.floor(canvas.height / h));
-                    }
+                    } 
+                    /* else {
+                        if (this.tiles[i][j] && dist1(camera, {x: j, y: i}) < 6) {
+                            ctx.fillStyle = this.color;
+                            ctx.fillRect(coords.x, coords.y, Math.floor(canvas.width / w), Math.floor(canvas.height / h));
+                        }
+                    } */
                 }
             }
             for (const item of this.items) {
@@ -904,6 +912,9 @@
     let iter = 0;
 
     function doStuff() {
+        if (spriteList.filter((sprite) => {return sprite.stat.control}).length == 0) {
+            return true;
+        }
         const sprite = spriteList[iter];
         if (!sprite.isAlive()) {
             sprite.dropItem();
@@ -989,7 +1000,7 @@
     }
 
     resize();
-    //alert('Your goal is to escape the hotel. Watch out for the entities!');
+    alert('Escape the hotel. Beware the entities!');
     setTimeout(doStuff, 500);
     
 </script>
