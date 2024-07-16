@@ -2,7 +2,7 @@ const itemList = {
     potionHeal: {
         name:'Potion of Healing',
         spriteIndex: 1,
-        onUse: (target)=>{
+        onUse: function(target) {
             target.heal(20);
             target.item = 'none';
             target.applyCooldown();
@@ -13,7 +13,7 @@ const itemList = {
     xSpe: {
         name:'Potion of Swiftness',
         spriteIndex: 1,
-        onUse: (target)=>{
+        onUse: function(target) {
             target.changeStatStage('spe',10);
             target.item = 'none';
             target.applyCooldown();
@@ -24,7 +24,7 @@ const itemList = {
     xAtk: {
         name:'Potion of Strength',
         spriteIndex: 1,
-        onUse: (target)=>{
+        onUse: function(target) {
             target.changeStatStage('atk',10);
             target.item = 'none';
             target.applyCooldown();
@@ -35,7 +35,7 @@ const itemList = {
     key1: {
         name:'Key 1',
         spriteIndex: 2,
-        onUse: (target)=>{
+        onUse: function(target) {
             if (dist1(target.position, {x:31, y:17}) < 6) {
                 map.tiles[17][31] = 5;
                 console.log(`A door opened.`);
@@ -51,7 +51,7 @@ const itemList = {
     key2: {
         name:'Key 2',
         spriteIndex: 2,
-        onUse: (target)=>{
+        onUse: function(target) {
             if (dist1(target.position, {x:52, y:15}) < 6) {
                 map.tiles[15][52] = 5;
                 console.log(`A door opened.`);
@@ -66,7 +66,7 @@ const itemList = {
     key3: {
         name:'Key 3',
         spriteIndex: 2,
-        onUse: (target)=>{
+        onUse: function(target) {
             if (dist1(target.position, {x:52, y:14}) < 6) {
                 map.tiles[14][52] = 5;
                 console.log(`A door opened.`);
@@ -81,7 +81,7 @@ const itemList = {
     key4: {
         name:'Key 4',
         spriteIndex: 2,
-        onUse: (target)=>{
+        onUse: function(target) {
             if (dist1(target.position, {x:52, y:13}) < 6) {
                 map.tiles[13][52] = 5;
                 console.log(`A door opened.`);
@@ -96,7 +96,7 @@ const itemList = {
     key5: {
         name:'Key 5',
         spriteIndex: 2,
-        onUse: (target)=>{
+        onUse: function(target) {
             if (dist1(target.position, {x:51, y:14}) < 6) {
                 map.tiles[13][51] = 5;
                 console.log(`A door opened.`);
@@ -111,7 +111,7 @@ const itemList = {
     key6: {
         name:'Key 6',
         spriteIndex: 2,
-        onUse: (target)=>{
+        onUse: function(target) {
             if (dist1(target.position, {x:0, y:4}) < 6) {
                 map.tiles[4][0] = 5;
                 console.log(`A door opened.`);
@@ -125,11 +125,10 @@ const itemList = {
     },
     leftovers: {
         name: 'Leftovers',
-        onUse: (target)=>{
+        onUse: function(target) {
             target.dropItem();
         },
-        hasEndEffect: true,
-        onTurnEnd: (target)=>{
+        onTurnEnd: function(target) {
             target.heal(Math.floor(target.stat.maxHP / 16));
             console.log(`${target.name} healed with Leftovers`);
         },
@@ -137,7 +136,7 @@ const itemList = {
     },
     runningShoes: {
         name:'Running Shoes',
-        onUse: (target)=>{
+        onUse: function(target) {
             target.dropItem();
         },
         cooldownStatModifier: 2/3,
@@ -145,7 +144,7 @@ const itemList = {
     },
     ironBall: {
         name:'Iron Ball',
-        onUse: (target)=>{
+        onUse: function(target) {
             target.dropItem();
         },
         cooldownStatModifier: 3/2,

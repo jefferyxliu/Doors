@@ -204,6 +204,7 @@
             this.name = name;
             this.stat = stat;
             this.HP = this.stat.maxHP;
+            this.types = ['normal'];
             this.position = position;
             this.startPosition = position;
             this.direction = direction;
@@ -211,12 +212,12 @@
             this.actionCounter = 0;
             this.moveset = [
                 'moveTackle',
-                'moveHyperBeam',
+                'moveKarateChop',
                 'moveSwordsDance',
                 'moveQuickAttack'
             ];
             this.item = item;
-            this.statusEffects = [];
+            this.statusEffects = {};
 
             document.getElementById('StatBox').innerHTML += 
                 `<div id = "${this.name}-Box" style="border: 1pt solid black; border-radius: 8px; padding: 5px;">\
@@ -256,7 +257,23 @@
 
         changeStatStage(stat, addTurns = 10) {
 
-            const i = this.statusEffects.findIndex((status)=>{return status.name == `${stat}Up`});
+            let newTurns = addTurns;
+            if (Object.hasOwn(this.statusEffects, `${stat}Up`)) {
+                newTurns += this.statusEffects[`${stat}Up`];
+            }
+            if (Object.hasOwn(this.statusEffects, `${stat}Down`)) {
+                newTurns -= this.statusEffects[`${stat}Down`];
+            }
+            delete this.statusEffects[`${stat}Up`];
+            delete this.statusEffects[`${stat}Down`];
+            if (newTurns > 0) {
+                this.statusEffects[`${stat}Up`] = newTurns;
+            }
+            if (newTurns < 0) {
+                this.statusEffects[`${stat}Down`] = -newTurns;
+            }
+
+/*             const i = this.statusEffects.findIndex((status)=>{return status.name == `${stat}Up`});
             const j = this.statusEffects.findIndex((status)=>{return status.name == `${stat}Down`});
             let newTurns = addTurns;
             if (i != -1) {
@@ -271,7 +288,7 @@
             }
             if (newTurns < 0) {
                 this.statusEffects.push({name:`${stat}Down`, turns: -newTurns});
-            }
+            } */
         }
 
         modifyStat(stat, baseValue) {
@@ -282,12 +299,18 @@
                     value *= item[`${stat}StatModifier`];
                 };
             }
-            for (const status of this.statusEffects) {
-                const st = statusList[status.name];
+            for (const status in this.statusEffects) {
+                const st = statusList[status];
                 if (Object.hasOwn(st, `${stat}StatModifier`)) {
                     value *= st[`${stat}StatModifier`];
                 };
             }
+/*             for (const status of this.statusEffects) {
+                const st = statusList[status.name];
+                if (Object.hasOwn(st, `${stat}StatModifier`)) {
+                    value *= st[`${stat}StatModifier`];
+                };
+            } */
             return Math.max(Math.floor(value), 1);
         }
 
@@ -325,7 +348,7 @@
         }
 
         useMove(n = 0) {
-            moveList[this.moveset[n]].onUse(this);
+            onUseMove(this, moveList[this.moveset[n]]);
         }
 
         getTarget() {
@@ -413,18 +436,21 @@
         endTurn() {
             if (this.item != 'none') {
                 const it = itemList[this.item];
-                if (it.hasEndEffect) {
+                if (Object.hasOwn(it, 'onTurnEnd')) {
                     it.onTurnEnd(this);
                 }
             }
-            for (const status of this.statusEffects) {
-                const st = statusList[status.name];
-                if (st.hasEndEffect) {
+            for (const status in this.statusEffects) {
+                const st = statusList[status];
+                if (Object.hasOwn(st, 'onTurnEnd')) {
                     st.onTurnEnd(this);
                 }
-                status.turns--;
+                this.statusEffects[status]--;
+                if (this.statusEffects[status] == 0) {
+                    delete this.statusEffects[status];
+                }
             }
-            this.statusEffects = this.statusEffects.filter((status)=>{return status.turns > 0});
+            /* this.statusEffects = this.statusEffects.filter((status)=>{return status.turns > 0}); */
         }
 
         printTo(hidden = false) {
@@ -498,7 +524,7 @@
                         const d = dist(this.position, target.position);
                         const d1 = dist1(this.position, target.position);
                         if (d == 1) {
-                            moveList.moveTackle.onUse(this);
+                            onUseMove(this, moveList.moveTackle);
                         } else {
                             if (d > 1 && d1 < 9) {
                                 const s = this.smartGetDistance(addCoords(target.position, controls[opposite[target.direction]]));
@@ -555,7 +581,7 @@
                     if (targets.length > 0) {
                         this.turnToward(targets[0].position);
                         this.stat.nature = 'attack';
-                        moveList.moveTackle.onUse(this);
+                        onUseMove(this, moveList.moveTackle);
                     } else {
                         if (this.getTarget()) {
                             this.direction = opposite[this.direction];
@@ -886,7 +912,7 @@
     }
 
     document.addEventListener('keydown', e => {
-        if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Space', 'KeyC', 'KeyX', 'KeyX', 'KeyH','KeyV','Digit1','Digit2','Digit3','Digit4'].includes(e.code)) {
+        if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Space', 'KeyZ', 'KeyX', 'KeyC', 'KeyV','KeyH','Digit1','Digit2','Digit3','Digit4'].includes(e.code)) {
             actionQueue.push(e.code);
             doStuff();
         }
@@ -937,7 +963,7 @@
                             you.move(code);
                         }
                         if (code == 'Space') {
-                            moveList.moveTackle.onUse(you);
+                            onUseMove(you, moveList.moveTackle);
                             //you.attack(you.getTarget(), 5);
                         }
                         if (['Digit1', 'Digit2', 'Digit3', 'Digit4'].includes(code)) {
