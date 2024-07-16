@@ -199,24 +199,37 @@
     }
 
     class Entity {
-        
-        constructor(name, stat, position, color = 'black', direction = 'ArrowRight', sprite = false, item = 'none', size = 24) {
+        constructor(name, stat, position, options = {
+                color:'black',
+                direction: 'ArrowRight',
+                sprite: false,
+                item: 'none',
+                size: 24,
+                team: 1,
+                control: false,
+                moveset: [
+                    'moveTackle',
+                    'moveKarateChop',
+                    'moveSwordsDance',
+                    'moveQuickAttack'
+                ]
+            }) {
             this.name = name;
             this.stat = stat;
             this.HP = this.stat.maxHP;
-            this.types = ['normal'];
+            this.types = this.stat.types;
+            this.actionCounter = 0;
+
             this.position = position;
             this.startPosition = position;
-            this.direction = direction;
-            this.color = color;
-            this.actionCounter = 0;
-            this.moveset = [
-                'moveTackle',
-                'moveKarateChop',
-                'moveSwordsDance',
-                'moveQuickAttack'
-            ];
-            this.item = item;
+
+            this.direction = options.direction;
+            this.color = options.color;
+            this.team = options.team;
+            this.control = options.control;
+
+            this.moveset = options.moveset;
+            this.item = options.item;
             this.statusEffects = {};
 
             document.getElementById('StatBox').innerHTML += 
@@ -227,8 +240,8 @@
                 </div>`;
 
 
-            this.sprite = sprite;
-            this.size = size;
+            this.sprite = options.sprite;
+            this.size = options.size;
             if (this.sprite) {
                 this.image = new Image(this.size, this.size);
                 this.image.src = `sprites/${this.sprite}.png`;
@@ -327,7 +340,7 @@
                     console.log(this.name, 'move');
                 } else {
                     if (target != 'wall') {
-                        if (target.stat.team == this.stat.team) {
+                        if (target.team == this.team) {
                             this.switch(target);
                         } else {
                             this.wait();
@@ -517,7 +530,7 @@
         AIMove() {
             if (this.isAlive()) {
                 if (this.stat.nature == 'attack') {
-                    let targets = spriteList.filter((sprite)=>{return sprite.stat.team != this.stat.team && sprite.isAlive()});
+                    let targets = spriteList.filter((sprite)=>{return sprite.team != this.team && sprite.isAlive()});
                     if (targets.length > 0) {
                         const target = targets.toSorted((sprite1, sprite2)=> dist(this.position, sprite1.position) - dist(this.position, sprite2.position))[0];
                         this.turnToward(target.position);
@@ -562,7 +575,7 @@
                     }
                 }
                 if (this.stat.nature == 'wander') {
-                    let targets = spriteList.filter((sprite)=>{return sprite.stat.team != this.stat.team && dist1(this.position, sprite.position) < 10 && !map.isHidden(sprite.position) && sprite.isAlive()});
+                    let targets = spriteList.filter((sprite)=>{return sprite.team != this.team && dist1(this.position, sprite.position) < 10 && !map.isHidden(sprite.position) && sprite.isAlive()});
                     if (targets.length > 0) {
                         const target = targets.toSorted((sprite1, sprite2)=> dist(this.position, sprite1.position) - dist(this.position, sprite2.position))[0];
                         this.turnToward(target.position);
@@ -577,7 +590,7 @@
                     }
                 }
                 if (this.stat.nature == 'back and forth') {
-                    let targets = spriteList.filter((sprite)=>{return sprite.stat.team != this.stat.team && dist(this.position, sprite.position) == 1 && !map.isHidden(sprite.position) && sprite.isAlive()});
+                    let targets = spriteList.filter((sprite)=>{return sprite.team != this.team && dist(this.position, sprite.position) == 1 && !map.isHidden(sprite.position) && sprite.isAlive()});
                     if (targets.length > 0) {
                         this.turnToward(targets[0].position);
                         this.stat.nature = 'attack';
@@ -590,7 +603,7 @@
                     }
                 }
                 if (this.stat.nature == 'follow team') {
-                    let targets = spriteList.filter((sprite) => {return sprite.stat.team == this.stat.team && sprite.isAlive() && sprite.name != this.name && sprite.stat.control == true});
+                    let targets = spriteList.filter((sprite) => {return sprite.team == this.team && sprite.isAlive() && sprite.name != this.name && sprite.control == true});
                     
                     if (targets.length > 0) {
                         const target = targets.toSorted((sprite1, sprite2)=> dist(this.position, sprite1.position) - dist(this.position, sprite2.position))[0];
@@ -622,13 +635,18 @@
     }
 
     class Map {
-        constructor(tiles = [
+        constructor(options = {
+            tiles: [
                 [0,1,0,0],
                 [1,0,1,1],
                 [0,0,0,0],
-            ], sprite = false, items = [], itemSprite = false) {
-            this.tiles = tiles;
-            this.sprite = sprite;
+            ], 
+            mapSprite: false,
+            items: [], 
+            itemSprite: false
+        }) {
+            this.tiles = options.tiles;
+            this.sprite = options.mapSprite;
             this.tileSize = 24;
             if (this.sprite) {
                 this.image = new Image(this.tileSize, this.tileSize);
@@ -636,8 +654,8 @@
                 this.loaded = false;
                 this.image.onload = () => {this.loaded = true};
             }
-            this.items = items;
-            this.itemSprite = itemSprite;
+            this.items = options.items;
+            this.itemSprite = options.itemSprite;
             if (this.itemSprite) {
                 this.imageItem = new Image(this.tileSize, this.tileSize);
                 this.imageItem.src = `sprites/${this.itemSprite}.png`;
@@ -739,12 +757,25 @@
             cooldown: 12,
             nature: 'attack',
             solidTiles: [1,2,4,6,7],
-            team: 0,
-            control: true
-        },{
+            types: ['normal']
+        }, {
             x: 25,
             y: 17
-        }, 'black', 'ArrowRight', 'human', 'none', 24),
+        }, {
+            color:'black',
+            direction: 'ArrowRight',
+            sprite: 'human',
+            item: 'none',
+            size: 24,
+            team: 0,
+            control: true,
+            moveset: [
+                'moveTackle',
+                'moveKarateChop',
+                'moveSwordsDance',
+                'moveQuickAttack'
+            ]
+            }),
 
         new Entity('Random Noob',
         {
@@ -754,12 +785,25 @@
             cooldown: 12,
             nature: 'follow team',
             solidTiles: [1,2,4,6,7],
-            team: 0,
-            control: false
-        },{
+            types: ['normal']
+        }, {
             x: 53,
             y: 17
-        }, 'black', 'ArrowRight', 'human2'),
+        }, {
+            color:'black',
+            direction: 'ArrowRight',
+            sprite: 'human2',
+            item: 'none',
+            size: 24,
+            team: 0,
+            control: false,
+            moveset: [
+                'moveTackle',
+                'moveKarateChop',
+                'moveSwordsDance',
+                'moveQuickAttack'
+            ]
+            }),
 
 /*         new Entity('You 3',
         {
@@ -783,11 +827,25 @@
             cooldown: 16,
             nature: 'attack',
             solidTiles: [1,2,3,4,7],
-            team: 1
+            types: ['fighting']
         }, {
             x: 44,
             y: 29
-        }, 'brown', 'ArrowRight', 'figure'),
+        }, {
+            color:'brown',
+            direction: 'ArrowRight',
+            sprite: 'figure',
+            item: 'none',
+            size: 24,
+            team: 1,
+            control: false,
+            moveset: [
+                'moveTackle',
+                'moveKarateChop',
+                'moveSwordsDance',
+                'moveQuickAttack'
+            ]
+            }),
 
         new Entity('Rush 2',{
             maxHP: 10,
@@ -796,11 +854,25 @@
             cooldown: 8,
             nature: 'back and forth',
             solidTiles: [1,2,3,4,7],
-            team: 1
+            types: ['dark']
         }, {
             x: 25,
             y: 11
-        }, 'brown', 'ArrowRight', 'rush', 'key6', 24),
+        }, {
+            color:'brown',
+            direction: 'ArrowRight',
+            sprite: 'rush',
+            item: 'key6',
+            size: 24,
+            team: 1,
+            control: false,
+            moveset: [
+                'moveTackle',
+                'moveKarateChop',
+                'moveSwordsDance',
+                'moveQuickAttack'
+            ]
+        }),
 
         new Entity('Rush 1',{
             maxHP: 10,
@@ -809,11 +881,25 @@
             cooldown: 8,
             nature: 'back and forth',
             solidTiles: [1,2,3,4,7],
-            team: 1
+            types: ['dark']
         }, {
             x: 29,
             y: 29
-        }, 'brown', 'ArrowUp', 'rush'),
+        },  {
+            color:'brown',
+            direction: 'ArrowUp',
+            sprite: 'rush',
+            item: 'none',
+            size: 24,
+            team: 1,
+            control: false,
+            moveset: [
+                'moveTackle',
+                'moveKarateChop',
+                'moveSwordsDance',
+                'moveQuickAttack'
+            ]
+            }),
 
         new Entity('Seek',{
             maxHP: 20,
@@ -822,11 +908,25 @@
             cooldown: 11,
             nature: 'attack',
             solidTiles: [1,2,3,4,7],
-            team: 1
+            types: ['poison']
         }, {
             x: 48,
             y: 1
-        }, 'brown', 'ArrowRight', 'seek'),
+        }, {
+            color:'brown',
+            direction: 'ArrowRight',
+            sprite: 'seek',
+            item: 'none',
+            size: 24,
+            team: 1,
+            control: false,
+            moveset: [
+                'moveTackle',
+                'moveKarateChop',
+                'moveSwordsDance',
+                'moveQuickAttack'
+            ]
+        }),
 
         new Entity('Ambush',{
             maxHP: 15,
@@ -835,16 +935,34 @@
             cooldown: 4,
             nature: 'back and forth',
             solidTiles: [1,2,3,4,7],
-            team: 1
+            types: ['ghost']
         }, {
             x: 39,
             y: 13
-        }, 'brown', 'ArrowRight', 'ambush')
+        }, {
+            color:'brown',
+            direction: 'ArrowRight',
+            sprite: 'ambush',
+            item: 'none',
+            size: 24,
+            team: 1,
+            control: false,
+            moveset: [
+                'moveTackle',
+                'moveKarateChop',
+                'moveSwordsDance',
+                'moveQuickAttack'
+            ]
+        })
     ];
 
     let you = spriteList[0];
 
-    const map = new Map(mapTiles, 'map2', [
+    const map = new Map({
+        tiles: mapTiles,
+        mapSprite:'map2',
+        itemSprite:'items', 
+        items: [
                 {
                     name:'xAtk',
                     position: {y:4,x:4}
@@ -886,7 +1004,8 @@
                     position: {y:36,x:53}
                 },
                 
-            ], 'items');
+            ]
+    });
 
     const actionQueue = [];
 
@@ -938,7 +1057,7 @@
     let iter = 0;
 
     function doStuff() {
-        if (spriteList.filter((sprite) => {return sprite.stat.control}).length == 0) {
+        if (spriteList.filter((sprite) => {return sprite.control}).length == 0) {
             return true;
         }
         const sprite = spriteList[iter];
@@ -951,7 +1070,7 @@
         } else {
             sprite.actionCounter--;
             if (sprite.actionCounter <= 0 && sprite.isAlive()) {
-                if (sprite.stat.control) {
+                if (sprite.control) {
                     you = sprite;
                     if (actionQueue.length == 0) {
                         sprite.actionCounter++;

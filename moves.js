@@ -10,42 +10,7 @@ const moveList = {
         baseAccuracy: 100,
         description: ''
     },
-    moveKarateChop: {
-        name:'Karate Chop',
-        type: 'fighting',
-        category: 'physical',
-        getTargets: function(user) {
-            return user.getFrontSprites([{x:1, y:0}]);
-        },
-        basePower: 50,
-        baseAccuracy: 100,
-        description: ''
-    },
-    moveLaserBeam: {
-        name:'Laser Beam',
-        type: 'normal',
-        category: 'special',
-        getTargets: function(user) {
-            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:3, y:0}]);
-        },
-        basePower: 50,
-        baseAccuracy: 100,
-        description: ''
-    },
-    moveHyperBeam: {
-        name:'Hyper Beam',
-        type: 'normal',
-        category: 'special',
-        getTargets: function(user) {
-            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:3, y:0}]);
-        },
-        basePower: 150,
-        baseAccuracy: 90,
-        userSecondaryEffect: function(user) {
-            user.actionCounter += 5;
-        },
-        description: ''
-    },
+
     moveQuickAttack: {
         name:'Quick Attack',
         type: 'normal',
@@ -60,8 +25,138 @@ const moveList = {
         },
         description: ''
     },
+
+    moveKarateChop: {
+        name:'Karate Chop',
+        type: 'fighting',
+        category: 'physical',
+        getTargets: function(user) {
+            return user.getFrontSprites([{x:1, y:0}]);
+        },
+        basePower: 50,
+        baseAccuracy: 100,
+        description: ''
+    },
+
+    moveIceBeam: {
+        name:'Ice Beam',
+        type: 'ice',
+        category: 'special',
+        getTargets: function(user) {
+            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:3, y:0}]);
+        },
+        basePower: 90,
+        baseAccuracy: 100,
+        targetSecondaryEffect: function(target) {
+            if (Math.floor(Math.random() * 100) < 10) {
+                //target.inflictStatus('frostbite', 3);
+            }
+        },
+        description: ''
+    },
+
+    moveFlamethrower: {
+        name:'Flamethrower',
+        type: 'fire',
+        category: 'special',
+        getTargets: function(user) {
+            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:3, y:0}]);
+        },
+        basePower: 90,
+        baseAccuracy: 100,
+        targetSecondaryEffect: function(target) {
+            if (Math.floor(Math.random() * 100) < 10) {
+                //target.inflictStatus('burn', 3);
+            }
+        },
+        description: ''
+    },
+
+    moveThunderbolt: {
+        name:'Thunderbolt',
+        type: 'electric',
+        category: 'special',
+        getTargets: function(user) {
+            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:3, y:0}]);
+        },
+        basePower: 90,
+        baseAccuracy: 100,
+        targetSecondaryEffect: function(target) {
+            if (Math.floor(Math.random() * 100) < 10) {
+                //target.inflictStatus('paralysis', 3);
+            }
+        },
+        description: ''
+    },
+
+    moveEarthquake: {
+        name:'Earthquake',
+        type: 'ground',
+        category: 'physical',
+        getTargets: function(user) {
+            return user.getNearbySprites(5);
+        },
+        basePower: 100,
+        baseAccuracy: 100,
+        description: ''
+    },
+
+    moveDragonPulse: {
+        name:'Dragon Pulse',
+        type: 'dragon',
+        category: 'special',
+        getTargets: function(user) {
+            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:3, y:0}]);
+        },
+        basePower: 85,
+        baseAccuracy: Infinity,
+        description: ''
+    },
+
+    moveDarkPulse: {
+        name:'Dark Pulse',
+        type: 'dark',
+        category: 'special',
+        getTargets: function(user) {
+            return user.getAdjacentSprites(1);
+        },
+        basePower: 80,
+        baseAccuracy: Infinity,
+        description: ''
+    },
+
+    moveHyperBeam: {
+        name:'Hyper Beam',
+        type: 'normal',
+        category: 'special',
+        getTargets: function(user) {
+            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:3, y:0}]);
+        },
+        basePower: 150,
+        baseAccuracy: 90,
+        userSecondaryEffect: function(user) {
+            user.actionCounter += 5;
+        },
+        description: ''
+    },
+
+    moveGigaImpact: {
+        name:'Giga Impact',
+        type: 'normal',
+        category: 'physical',
+        getTargets: function(user) {
+            return user.getFrontSprites([{x:1, y:0}]);
+        },
+        basePower: 150,
+        baseAccuracy: 90,
+        userSecondaryEffect: function(user) {
+            user.actionCounter += 5;
+        },
+        description: ''
+    },
+
     moveSwordsDance: {
-        name:'SwordsDance',
+        name:'Swords Dance',
         type: 'normal',
         category: 'status',
         getTargets: function(user) {
@@ -73,6 +168,21 @@ const moveList = {
         },
         description: ''
     },
+
+    moveIronDefense: {
+        name:'Iron Defense',
+        type: 'steel',
+        category: 'status',
+        getTargets: function(user) {
+            return user;
+        },
+        baseAccuracy: Infinity,
+        userSecondaryEffect: function(user) {
+            user.changeStatStage('def', 10);
+        },
+        description: ''
+    },
+
     moveRecover: {
         name:'Recover',
         type: 'normal',
@@ -187,33 +297,202 @@ function damageFormula(user, target, move, options) {
 const typeChart = {
     'normal': {
         'ghost': 0,
+
         'rock': 1/2,
         'steel': 1/2,
     },
-    'ghost': {
-        'normal': 0,
-        'dark': 1/2,
-        'ghost': 2,
-        'psychic': 2,
-    },
+
     'fighting': {
         'ghost': 0,
-        'psychic': 1/2,
+
         'flying': 1/2,
-        'fairy': 1/2,
         'poison': 1/2,
-        'dark': 2,
+        'bug': 1/2,
+        'psychic': 1/2,
+        'fairy': 1/2,
+
+        'normal': 2,
         'rock': 2,
         'steel': 2,
         'ice': 2,
-        'normal': 2,
+        'dark': 2
     },
+
+    'flying': {
+        'rock': 1/2,
+        'steel': 1/2,
+        'electric': 1/2,
+
+        'fighting': 2,
+        'bug': 2,
+        'grass': 2
+        
+    },
+
+    'poison': {
+        'steel': 0,
+
+        'poison': 1/2,
+        'ground': 1/2,
+        'rock': 1/2,
+        'ghost': 1/2,
+
+        'grass': 2,
+        'fairy': 2    
+    },
+
+    'ground': {
+        'flying': 0,
+
+        'bug': 1/2,
+        'grass': 1/2,
+
+        'poison': 2,
+        'rock': 2,
+        'steel': 2,
+        'fire': 2,
+        'electric': 2
+    },
+
+    'rock': {
+        'fighting': 1/2,
+        'ground': 1/2,
+        'steel': 1/2,
+
+        'flying': 2,
+        'bug': 2,
+        'fire': 2,
+        'ice': 2
+    },
+
+    'bug': {
+        'fighting': 1/2,
+        'flying': 1/2,
+        'poison': 1/2,
+        'ghost': 1/2,
+        'steel': 1/2,
+        'fire': 1/2,
+        'fairy': 1/2,
+
+        'grass': 2,
+        'psychic': 2,
+        'dark': 2    
+    },
+
+    'ghost': {
+        'normal': 0,
+
+        'dark': 1/2,
+
+        'ghost': 2,
+        'psychic': 2
+    },
+
+    'steel': {
+        'steel': 1/2,
+        'fire': 1/2,
+        'water': 1/2,
+        'electric': 1/2,
+
+        'rock': 2,
+        'ice': 2,
+        'fairy': 2    
+    },
+
+    'fire': {
+        'rock': 1/2,
+        'fire': 1/2,
+        'water': 1/2,
+        'dragon': 1/2,
+
+        'bug': 2,
+        'steel': 2,
+        'grass': 2,
+        'ice': 2    
+    },
+
+    'water': {
+        'water': 1/2,
+        'grass': 1/2,
+        'dragon': 1/2,
+
+        'ground': 2,
+        'rock': 2,
+        'fire': 2  
+    },
+
+    'grass': {
+        'flying': 1/2,
+        'poison': 1/2,
+        'bug': 1/2,
+        'steel': 1/2,
+        'fire': 1/2,
+        'grass': 1/2,
+        'dragon': 1/2,
+
+        'ground': 2,
+        'rock': 2,
+        'water': 2    
+    },
+
+    'electric': {
+        'ground': 0,
+
+        'grass': 1/2,
+        'electric': 1/2,
+        'dragon': 1/2,
+
+        'flying': 2,
+        'water': 2
+    },
+
+    'psychic': {
+        'dark': 0,
+
+        'steel': 1/2,
+        'psychic': 1/2,
+
+        'fighting': 2,
+        'poison': 2   
+    },
+
+    'ice': {
+        'steel': 1/2,
+        'fire': 1/2,
+        'water': 1/2,
+        'ice': 1/2,
+
+        'flying': 2,
+        'ground': 2,
+        'grass': 2,
+        'dragon': 2
+    },
+
+    'dragon': {
+        'fairy': 0,
+
+        'steel': 1/2,
+
+        'dragon': 2
+    },
+
     'dark': {
+        'fighting': 1/2,
         'dark': 1/2,
         'fairy': 1/2,
-        'fighting': 1/2,
+        
         'ghost': 2,
-        'psychic': 2,
+        'psychic': 2
+    },
+
+    'fairy': {
+        'poison': 1/2,
+        'steel': 1/2,
+        'fire': 1/2,
+        
+        'fighting': 2,
+        'dragon': 2,
+        'dark': 2
     },
 
     isImmune: function (moveType, defendingTypes) {
