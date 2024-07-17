@@ -304,6 +304,36 @@
             } */
         }
 
+        inflictStatus(status, turns) {
+            const message = {
+                    'burn': `${this.name} was burned.`, 
+                    'frostbite': `${this.name} was frostbitten.`,
+                    'paralysis': `${this.name} was paralyzed.`,
+                    'sleep': `${this.name} fell asleep.`,
+                    'poison': `${this.name} was poisoned.`,
+            }
+
+            if (status == 'burn' && this.types.includes('fire')) {
+                return false;
+            }
+            if (status == 'paralysis' && this.types.includes('electric')) {
+                return false;
+            }
+            if (status == 'poison' && (this.types.includes('poison') || this.types.includes('steel'))) {
+                return false;
+            }
+            const volatile = ['burn', 'frostbite', 'paralysis', 'sleep', 'poison'];
+            if (volatile.includes(status)) {
+                for (const oldStatus of volatile) {
+                    delete this.statusEffects[oldStatus];
+                }
+                this.statusEffects[status] = turns;
+
+                console.log(message[status]);
+            }
+            return true;
+        }
+
         modifyStat(stat, baseValue) {
             let value = baseValue;
             if (this.item != 'none') {
@@ -645,6 +675,7 @@
             items: [], 
             itemSprite: false
         }) {
+
             this.tiles = options.tiles;
             this.sprite = options.mapSprite;
             this.tileSize = 24;
@@ -754,10 +785,12 @@
             maxHP: 10,
             atk: 10,
             def: 10,
+            spa: 10,
+            spd: 10,
             cooldown: 12,
             nature: 'attack',
             solidTiles: [1,2,4,6,7],
-            types: ['normal']
+            types: ['ice']
         }, {
             x: 25,
             y: 17
@@ -771,17 +804,49 @@
             control: true,
             moveset: [
                 'moveTackle',
+                'moveIceBeam',
+                'moveHyperBeam',
+                'moveGigaImpact'
+            ]
+        }),
+
+        new Entity('Test Dummy',
+        {
+            maxHP: 1000,
+            atk: 10,
+            def: 10,
+            spa: 10,
+            spd: 10,
+            cooldown: 12,
+            nature: 'follow team',
+            solidTiles: [1,2,4,6,7],
+            types: ['normal']
+        }, {
+            x: 24,
+            y: 17
+        }, {
+            color:'black',
+            direction: 'ArrowRight',
+            sprite: 'human2',
+            item: 'leftovers',
+            size: 24,
+            team: 0,
+            control: false,
+            moveset: [
+                'moveTackle',
                 'moveKarateChop',
                 'moveSwordsDance',
                 'moveQuickAttack'
             ]
-            }),
+        }),
 
         new Entity('Random Noob',
         {
             maxHP: 10,
             atk: 10,
             def: 10,
+            spa: 10,
+            spd: 10,
             cooldown: 12,
             nature: 'follow team',
             solidTiles: [1,2,4,6,7],
@@ -824,6 +889,8 @@
             maxHP: 50,
             atk: 25,
             def: 20,
+            spa: 10,
+            spd: 20,
             cooldown: 16,
             nature: 'attack',
             solidTiles: [1,2,3,4,7],
@@ -851,6 +918,8 @@
             maxHP: 10,
             atk: 4,
             def: 15,
+            spa: 4,
+            spd: 15,
             cooldown: 8,
             nature: 'back and forth',
             solidTiles: [1,2,3,4,7],
@@ -878,6 +947,8 @@
             maxHP: 10,
             atk: 4,
             def: 15,
+            spa: 4,
+            spd: 15,
             cooldown: 8,
             nature: 'back and forth',
             solidTiles: [1,2,3,4,7],
@@ -905,6 +976,8 @@
             maxHP: 20,
             atk: 5,
             def: 15,
+            spa: 5,
+            spd: 15,
             cooldown: 11,
             nature: 'attack',
             solidTiles: [1,2,3,4,7],
@@ -932,6 +1005,8 @@
             maxHP: 15,
             atk: 3,
             def: 15,
+            spa: 3,
+            spd: 15,
             cooldown: 4,
             nature: 'back and forth',
             solidTiles: [1,2,3,4,7],
@@ -955,7 +1030,7 @@
             ]
         })
     ];
-
+    
     let you = spriteList[0];
 
     const map = new Map({
@@ -1145,7 +1220,7 @@
     }
 
     resize();
-    alert('Escape the hotel. Beware the entities!');
+    //alert('Escape the hotel. Beware the entities!');
     setTimeout(doStuff, 500);
     
 </script>

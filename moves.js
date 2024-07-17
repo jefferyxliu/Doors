@@ -49,7 +49,7 @@ const moveList = {
         baseAccuracy: 100,
         targetSecondaryEffect: function(target) {
             if (Math.floor(Math.random() * 100) < 10) {
-                //target.inflictStatus('frostbite', 3);
+                target.inflictStatus('frostbite', 3);
             }
         },
         description: ''
@@ -66,7 +66,7 @@ const moveList = {
         baseAccuracy: 100,
         targetSecondaryEffect: function(target) {
             if (Math.floor(Math.random() * 100) < 10) {
-                //target.inflictStatus('burn', 3);
+                target.inflictStatus('burn', 3);
             }
         },
         description: ''
@@ -83,7 +83,24 @@ const moveList = {
         baseAccuracy: 100,
         targetSecondaryEffect: function(target) {
             if (Math.floor(Math.random() * 100) < 10) {
-                //target.inflictStatus('paralysis', 3);
+                target.inflictStatus('paralysis', 3);
+            }
+        },
+        description: ''
+    },
+
+    moveSludgeBomb: {
+        name:'Sludge Bomb',
+        type: 'poison',
+        category: 'special',
+        getTargets: function(user) {
+            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}]);
+        },
+        basePower: 90,
+        baseAccuracy: 100,
+        targetSecondaryEffect: function(target) {
+            if (true || Math.floor(Math.random() * 100) < 30) {
+                target.inflictStatus('poison', 3);
             }
         },
         description: ''
@@ -202,37 +219,60 @@ function onUseMove(user, move) {
     console.log(`${user.name} used ${move.name}!`)
     const targets = move.getTargets(user);
     if (!map.isHidden(user.position) && user.isAlive()) {
-        let spreadModifier = false;
-        if (targets.length > 1) {
-            spreadModifier = true;
-        }
-        let hitAny = false;
-        for (const target of targets) {
-            if (!map.isHidden(target.position)) {
-                const failed = failCheck(user, target, move);
-                if (!failed) {
-                    hitAny = true;
-                    if (move.category != 'status') {
-                        target.damage(damageFormula(user, target, move, {spread: spreadModifier}));
+        const userFailed = userFailCheck(user, targets, move) 
+        if (!userFailed) {
+            let spreadModifier = false;
+            if (targets.length > 1) {
+                spreadModifier = true;
+            }
+            let hitAny = false;
+            for (const target of targets) {
+                if (!map.isHidden(target.position)) {
+                    const targetFailed = targetFailCheck(user, target, move);
+                    if (!targetFailed) {
+                        hitAny = true;
+                        if (move.category != 'status') {
+                            target.damage(damageFormula(user, target, move, {spread: spreadModifier}));
+                        }
+                        if (Object.hasOwn(move, 'targetSecondaryEffect')) {
+                            move.targetSecondaryEffect(target);
+                        }
+                    } else {
+                        console.log(targetFailed);
                     }
-                    if (Object.hasOwn(move, 'targetSecondaryEffect')) {
-                        move.targetSecondaryEffect(target);
-                    }
-                } else {
-                    console.log(failed);
                 }
             }
-        }
-        if (hitAny) {
-            if (Object.hasOwn(move, 'userSecondaryEffect')) {
-                move.userSecondaryEffect(user);
+            if (hitAny) {
+                if (Object.hasOwn(move, 'userSecondaryEffect')) {
+                    move.userSecondaryEffect(user);
+                }
             }
+        } else {
+            console.log(userFailed);
         }
     }
     user.applyCooldown();
 }
 
-function failCheck(user, target, move) {
+function userFailCheck(user, targets, move) {
+
+    //1-8 status fails drowsing, full paralysis
+    for (const status in user.statusEffects) {
+        const st = statusList[status];
+        if (Object.hasOwn(st, 'onUserFailCheck')) {
+            const failed = st.onUserFailCheck(user);
+            if (failed) {
+                return failed;
+            }
+        };
+    }
+    return false;
+}
+
+function targetFailCheck(user, target, move) {
+
+
+
     //52. type immunity
     if (move.category != 'status') {
         if (typeChart.isImmune(move.type, target.types)) {
@@ -249,12 +289,27 @@ function failCheck(user, target, move) {
 function damageFormula(user, target, move, options) {
     const damageAdjust = 1/10;
     let s = '';
-    const userAtk = user.modifyStat('atk', user.stat.atk);
-    const targetDef = target.modifyStat('def', target.stat.def);
+
+    let attackingStat, defendingStat;
+    
+    if (move.category == 'physical') {
+        attackingStat = user.stat.atk;
+        defendingStat = target.stat.def;
+
+        attackingStat = user.modifyStat('atk', attackingStat);
+        defendingStat = target.modifyStat('def', defendingStat);
+    }
+    if (move.category == 'special') {
+        attackingStat = user.stat.spa;
+        defendingStat = target.stat.spd;
+
+        attackingStat = user.modifyStat('spa', attackingStat);
+        defendingStat = target.modifyStat('spd', defendingStat);
+    }
 
     let basePower = move.basePower;
 
-    let damage = Math.floor(damageAdjust * basePower * userAtk / targetDef);
+    let damage = Math.floor(damageAdjust * basePower * attackingStat / defendingStat);
     //spread modifier
     if (options.spread == true) {
         damage *= 0.75;
@@ -282,6 +337,14 @@ function damageFormula(user, target, move, options) {
     }
     if (typeModifier < 1) {
         s += 'It\'s not very effective...'
+    }
+
+    //status modifier (e.g. burn half physical damage)
+    for (const status in user.statusEffects) {
+        const st = statusList[status];
+        if (Object.hasOwn(st, 'getDamageModifier')) {
+            damage *= st.getDamageModifier(move);
+        };
     }
 
     //at least 1
