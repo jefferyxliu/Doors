@@ -37,7 +37,7 @@ const itemList = {
         spriteIndex: 2,
         onUse: function(target) {
             if (dist1(target.position, {x:31, y:17}) < 6) {
-                map.tiles[17][31] = 5;
+                game.map.tiles[17][31] = 5;
                 console.log(`A door opened.`);
                 target.item = 'none';
             } else {
@@ -53,7 +53,7 @@ const itemList = {
         spriteIndex: 2,
         onUse: function(target) {
             if (dist1(target.position, {x:52, y:15}) < 6) {
-                map.tiles[15][52] = 5;
+                game.map.tiles[15][52] = 5;
                 console.log(`A door opened.`);
                 target.item = 'none';
             } else {
@@ -68,7 +68,7 @@ const itemList = {
         spriteIndex: 2,
         onUse: function(target) {
             if (dist1(target.position, {x:52, y:14}) < 6) {
-                map.tiles[14][52] = 5;
+                game.map.tiles[14][52] = 5;
                 console.log(`A door opened.`);
                 target.item = 'none';
             } else {
@@ -83,7 +83,7 @@ const itemList = {
         spriteIndex: 2,
         onUse: function(target) {
             if (dist1(target.position, {x:52, y:13}) < 6) {
-                map.tiles[13][52] = 5;
+                game.map.tiles[13][52] = 5;
                 console.log(`A door opened.`);
                 target.item = 'none';
             } else {
@@ -98,7 +98,7 @@ const itemList = {
         spriteIndex: 2,
         onUse: function(target) {
             if (dist1(target.position, {x:51, y:14}) < 6) {
-                map.tiles[13][51] = 5;
+                game.map.tiles[13][51] = 5;
                 console.log(`A door opened.`);
                 target.item = 'none';
             } else {
@@ -113,7 +113,7 @@ const itemList = {
         spriteIndex: 2,
         onUse: function(target) {
             if (dist1(target.position, {x:0, y:4}) < 6) {
-                map.tiles[4][0] = 5;
+                game.map.tiles[4][0] = 5;
                 console.log(`A door opened.`);
                 target.item = 'none';
             } else {

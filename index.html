@@ -9,6 +9,11 @@
         border-radius: 8px;
         background-color: grey;
       }
+
+      #canvas2 {
+        background-color: black;
+      }
+
       .hide {
         display: none;
         background-color: purple;
@@ -86,12 +91,20 @@
 </div>
 
 </div>
-
-<script src = "map.js"></script>
+<script src = "species.js"></script>
 <script src = "items.js"></script>
 <script src = "moves.js"></script>
 <script src = "statusEffects.js"></script>
 <script>
+    let idGenerator = 0;
+    function generateNewID() {
+        idGenerator++;
+        return idGenerator;
+    }
+    function deepCopy(object) {
+        return JSON.parse(JSON.stringify(object));
+    }
+    
     const canvas = document.getElementById('canvas');
     const canvas2 = document.getElementById('canvas2');
     const h = 11;
@@ -131,7 +144,9 @@
             canvas2.height = m;
             statBox.style.height = `${window.innerHeight - m - verticalMargin + 58}px`;
         }
-        drawEverything(you.position);
+        if (game.loaded) {
+            game.drawEverything(game.you.position);
+        }
     }
 
     window.onresize = resize;
@@ -193,66 +208,53 @@
 
     function screenCoords(coords) {
         return {
-            x: (coords.x - you.position.x + Math.floor(w/2)) * Math.floor(canvas.width / w),
-            y: (coords.y - you.position.y + Math.floor(h/2)) * Math.floor(canvas.height / h)
+            x: (coords.x - game.you.position.x + Math.floor(w/2)) * Math.floor(canvas.width / w),
+            y: (coords.y - game.you.position.y + Math.floor(h/2)) * Math.floor(canvas.height / h)
         }
     }
 
     class Entity {
-        constructor(name, stat, position, options = {
-                color:'black',
-                direction: 'ArrowRight',
-                sprite: false,
-                item: 'none',
-                size: 24,
-                team: 1,
-                control: false,
-                moveset: [
-                    'moveTackle',
-                    'moveKarateChop',
-                    'moveSwordsDance',
-                    'moveQuickAttack'
-                ]
-            }) {
-            this.name = name;
-            this.stat = stat;
+        constructor(data) {
+            this.secretID = generateNewID();
+            this.name = data.nickname;
+            this.stat = data.stat;
             this.HP = this.stat.maxHP;
             this.types = this.stat.types;
             this.actionCounter = 0;
 
-            this.position = position;
-            this.startPosition = position;
+            this.position = data.position;
+            this.startPosition = data.position;
 
-            this.direction = options.direction;
-            this.color = options.color;
-            this.team = options.team;
-            this.control = options.control;
+            this.direction = data.options.direction;
+            this.color = this.stat.color;
+            this.team = data.options.team;
+            this.control = data.options.control;
 
-            this.moveset = options.moveset;
-            this.item = options.item;
+            this.moveset = data.options.moveset;
+            this.item = data.options.item;
             this.statusEffects = {};
 
-            document.getElementById('StatBox').innerHTML += 
-                `<div id = "${this.name}-Box" style="border: 1pt solid black; border-radius: 8px; padding: 5px;">\
-                    <div id = "${this.name}"></div>\
-                    <canvas id = "${this.name}-Sprite" height="24px" width="24px" style="border: none; background-color: transparent;"></canvas>\
-                    <canvas id = "${this.name}-HP" height="15" width="100"></canvas>\
-                </div>`;
+            this.sprite = data.options.sprite;
+            this.size = data.options.size;
 
-
-            this.sprite = options.sprite;
-            this.size = options.size;
+            this.loaded = false;
             if (this.sprite) {
                 this.image = new Image(this.size, this.size);
                 this.image.src = `sprites/${this.sprite}.png`;
-                this.loaded = false;
                 this.image.onload = () => {
                     this.loaded = true;
-                    this.spriteBox = document.getElementById(`${this.name}-Sprite`);
-                    this.spriteBoxCtx = this.spriteBox.getContext('2d');
-                    this.spriteBoxCtx.drawImage(this.image, this.size * 2, 0, this.size, this.size, 0, 0, 24, 24);
+                    this.generateHPBar();
                 };
             }
+        }
+
+        generateHPBar() {
+            document.getElementById('StatBox').innerHTML += 
+                `<div id = "${this.secretID}-Box" style="border: 1pt solid black; border-radius: 8px; padding: 5px;">\
+                    <div id = "${this.secretID}"></div>\
+                    <canvas id = "${this.secretID}-Sprite" height="24px" width="24px" style="border: none; background-color: transparent;"></canvas>\
+                    <canvas id = "${this.secretID}-HP" height="15" width="100"></canvas>\
+                </div>`;
         }
 
         isAlive() {
@@ -266,10 +268,12 @@
         wait() {
             this.applyCooldown();
             console.log(this.name, 'wait');
+            if (this.control) {
+                game.map.warp(this.position);
+            }
         }
 
         changeStatStage(stat, addTurns = 10) {
-
             let newTurns = addTurns;
             if (Object.hasOwn(this.statusEffects, `${stat}Up`)) {
                 newTurns += this.statusEffects[`${stat}Up`];
@@ -365,13 +369,14 @@
             if (code == this.direction) {
                 const target = this.getTarget()
                 if (!target) {
-                    this.position = addCoords(this.position, controls[code]);
+                    this.position = addCoords(this.position, game.controls[code]);
                     this.applyCooldown();
                     console.log(this.name, 'move');
                 } else {
                     if (target != 'wall') {
-                        if (target.team == this.team) {
+                        if (target.team == this.team && this.control) {
                             this.switch(target);
+                            this.applyCooldown();
                         } else {
                             this.wait();
                         }
@@ -395,11 +400,11 @@
         }
 
         getTarget() {
-            const fr = addCoords(this.position, controls[this.direction]);
-            if (map.isWall(fr, this.stat.solidTiles)) {
+            const fr = addCoords(this.position, game.controls[this.direction]);
+            if (game.map.isWall(fr, this.stat.solidTiles)) {
                 return 'wall';
             } else {
-                const s = spriteList.filter((sprite) => 
+                const s = game.spriteList.filter((sprite) => 
                     coordsEq(sprite.position, fr) && sprite.isAlive()
                 );
                 if (s.length > 0) {
@@ -411,27 +416,27 @@
         }
 
         getTargetSprites() {
-            const fr = addCoords(this.position, controls[this.direction]);
-            return spriteList.filter((sprite) => 
+            const fr = addCoords(this.position, game.controls[this.direction]);
+            return game.spriteList.filter((sprite) => 
                 coordsEq(sprite.position, fr) && sprite.isAlive()
             );
         }
 
         getAdjacentSprites() {
-            return spriteList.filter((sprite) => 
+            return game.spriteList.filter((sprite) => 
                 dist(sprite.position, this.position) == 1 && sprite.isAlive()
             );
         }
 
         getNearbySprites(n) {
-            return spriteList.filter((sprite) => {
+            return game.spriteList.filter((sprite) => {
                 const d = dist(sprite.position, this.position);
                 return d <= n && d > 0 && sprite.isAlive();
             });
         }
 
         getFrontSprites(tilePattern) {
-            return spriteList.filter((sprite) => {
+            return game.spriteList.filter((sprite) => {
                 return tilePattern.some((tile) => {
                     return coordsEq(sprite.position, addCoords(this.position, rotate(this.direction, tile)))
                 }) && sprite.isAlive();
@@ -440,14 +445,14 @@
 
         pickUpItem() {
             if (this.isAlive() && this.item == 'none') {
-                this.item = map.getItem(this.position);
+                this.item = game.map.getItem(this.position);
                 console.log(`${this.name} picked up ${this.item}`);
             }
         }
 
         dropItem() {
             if (this.item != 'none') {
-                map.spawnItem(this.item, this.position);
+                game.map.spawnItem(this.item, this.position);
                 console.log(`${this.name} dropped ${this.item}`);
                 this.item = 'none';
             }
@@ -497,9 +502,13 @@
         }
 
         printTo(hidden = false) {
-            this.nameBox = document.getElementById(`${this.name}-Box`);
-            this.nameLabel = document.getElementById(this.name);
-            this.HPBar = document.getElementById(`${this.name}-HP`);
+            if (!this.loaded) {
+                return false;
+            }
+            document.getElementById(`${this.secretID}-Sprite`).getContext('2d').drawImage(this.image, this.size * 2, 0, this.size, this.size, 0, 0, 24, 24);
+            this.nameBox = document.getElementById(`${this.secretID}-Box`);
+            this.nameLabel = document.getElementById(this.secretID);
+            this.HPBar = document.getElementById(`${this.secretID}-HP`);
             this.HPBarCtx = this.HPBar.getContext('2d');
             let s = `${this.name}`;
             if (this.isAlive()) {
@@ -526,7 +535,7 @@
         draw() {
             const coords = screenCoords(this.position);
             if (this.sprite && this.loaded) {
-                ctx.drawImage(this.image, this.size * arrowNumber[this.direction], 0, this.size, this.size, coords.x, coords.y, Math.floor(canvas.width / w), Math.floor(canvas.height / h));
+                ctx.drawImage(this.image, this.size * game.arrowNumber[this.direction], 0, this.size, this.size, coords.x, coords.y, Math.floor(canvas.width / w), Math.floor(canvas.height / h));
             } 
 /*             else {
                 ctx.fillStyle = this.color;
@@ -546,8 +555,8 @@
                 'ArrowDown': Infinity,
             };
             for (const direction in distances) {
-                const fr = addCoords(this.position, controls[direction]);
-                if (!map.isWall(fr, this.stat.solidTiles)) {
+                const fr = addCoords(this.position, game.controls[direction]);
+                if (!game.map.isWall(fr, this.stat.solidTiles)) {
                     distances[direction] = dist(fr, targetPosition);
                 }
             }
@@ -560,7 +569,7 @@
         AIMove() {
             if (this.isAlive()) {
                 if (this.stat.nature == 'attack') {
-                    let targets = spriteList.filter((sprite)=>{return sprite.team != this.team && sprite.isAlive()});
+                    let targets = game.spriteList.filter((sprite)=>{return sprite.team != this.team && sprite.isAlive()});
                     if (targets.length > 0) {
                         const target = targets.toSorted((sprite1, sprite2)=> dist(this.position, sprite1.position) - dist(this.position, sprite2.position))[0];
                         this.turnToward(target.position);
@@ -570,7 +579,7 @@
                             onUseMove(this, moveList.moveTackle);
                         } else {
                             if (d > 1 && d1 < 9) {
-                                const s = this.smartGetDistance(addCoords(target.position, controls[opposite[target.direction]]));
+                                const s = this.smartGetDistance(addCoords(target.position, game.controls[game.opposite[target.direction]]));
                                 //console.log(s);
                                 if (s.length > 0) {
                                     this.direction = randomElement(s);
@@ -605,7 +614,7 @@
                     }
                 }
                 if (this.stat.nature == 'wander') {
-                    let targets = spriteList.filter((sprite)=>{return sprite.team != this.team && dist1(this.position, sprite.position) < 10 && !map.isHidden(sprite.position) && sprite.isAlive()});
+                    let targets = game.spriteList.filter((sprite)=>{return sprite.team != this.team && dist1(this.position, sprite.position) < 10 && !game.map.isHidden(sprite.position) && sprite.isAlive()});
                     if (targets.length > 0) {
                         const target = targets.toSorted((sprite1, sprite2)=> dist(this.position, sprite1.position) - dist(this.position, sprite2.position))[0];
                         this.turnToward(target.position);
@@ -614,26 +623,26 @@
                     } else {
                         this.direction = randomElement(['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'])
                         if (this.getTarget()) {
-                            this.direction = opposite[this.direction];
+                            this.direction = game.opposite[this.direction];
                         }
                         this.move(this.direction);
                     }
                 }
                 if (this.stat.nature == 'back and forth') {
-                    let targets = spriteList.filter((sprite)=>{return sprite.team != this.team && dist(this.position, sprite.position) == 1 && !map.isHidden(sprite.position) && sprite.isAlive()});
+                    let targets = game.spriteList.filter((sprite)=>{return sprite.team != this.team && dist(this.position, sprite.position) == 1 && !game.map.isHidden(sprite.position) && sprite.isAlive()});
                     if (targets.length > 0) {
                         this.turnToward(targets[0].position);
                         this.stat.nature = 'attack';
                         onUseMove(this, moveList.moveTackle);
                     } else {
                         if (this.getTarget()) {
-                            this.direction = opposite[this.direction];
+                            this.direction = game.opposite[this.direction];
                         }
                         this.move(this.direction);
                     }
                 }
                 if (this.stat.nature == 'follow team') {
-                    let targets = spriteList.filter((sprite) => {return sprite.team == this.team && sprite.isAlive() && sprite.name != this.name && sprite.control == true});
+                    let targets = game.spriteList.filter((sprite) => {return sprite.team == this.team && sprite.isAlive() && sprite.name != this.name && sprite.control == true});
                     
                     if (targets.length > 0) {
                         const target = targets.toSorted((sprite1, sprite2)=> dist(this.position, sprite1.position) - dist(this.position, sprite2.position))[0];
@@ -644,7 +653,7 @@
                             this.wait();
                         } else {
                             if (d > 1 && d1 < 10) {
-                                const s = this.smartGetDistance(addCoords(target.position, controls[opposite[target.direction]]));
+                                const s = this.smartGetDistance(addCoords(target.position, game.controls[game.opposite[target.direction]]));
                                 //console.log(s);
                                 if (s.length > 0) {
                                     this.direction = randomElement(s);
@@ -660,24 +669,18 @@
                         this.wait();
                     }
                 }
+                if (this.stat.nature == 'wait') {
+                    this.wait();
+                }
             }
         }
     }
 
     class Map {
-        constructor(options = {
-            tiles: [
-                [0,1,0,0],
-                [1,0,1,1],
-                [0,0,0,0],
-            ], 
-            mapSprite: false,
-            items: [], 
-            itemSprite: false
-        }) {
-
+        constructor(options) {
             this.tiles = options.tiles;
             this.sprite = options.mapSprite;
+            this.warpZones = options.warpZones;
             this.tileSize = 24;
             if (this.sprite) {
                 this.image = new Image(this.tileSize, this.tileSize);
@@ -694,6 +697,7 @@
                 this.imageItem.onload = () => {this.loadedItem = true};
             }
         }
+
         deleteItem(itemName, coord) {
             const i = this.items.findIndex((item)=>{return item.name == itemName && coordsEq(coord, item.position)});
             if (i != -1) {
@@ -741,11 +745,19 @@
             }
         }
 
+        warp(coord) {
+            if (Object.hasOwn(this.warpZones, `${coord.x},${coord.y}`)) {
+                document.getElementById('StatBox').innerHTML = '';
+                const w = this.warpZones[`${coord.x},${coord.y}`];
+                game.loadMap(game.spriteList.filter((sprite)=>{return sprite.team == 0}), w.name, w.spawnLocation)
+            }
+        }
+
         draw(camera) {
             if (!(this.loaded)) {
-                ctx.fillStyle = 'black';
+                ctx.fillStyle = 'white';
                 ctx.font = "bold 24px monospace";
-                ctx.fillText('Loading...', 5, 25)
+                ctx.fillText('Loading...', 5, 25);
             }
             for (let i = 0; i < this.tiles.length; i++) {
                 for (let j = 0; j < this.tiles[i].length; j++) {
@@ -779,336 +791,10 @@
         }
     }
 
-    let spriteList = [
-        new Entity('You',
-        {
-            maxHP: 10,
-            atk: 10,
-            def: 10,
-            spa: 10,
-            spd: 10,
-            cooldown: 12,
-            nature: 'attack',
-            solidTiles: [1,2,4,6,7],
-            types: ['ice']
-        }, {
-            x: 25,
-            y: 17
-        }, {
-            color:'black',
-            direction: 'ArrowRight',
-            sprite: 'human',
-            item: 'none',
-            size: 24,
-            team: 0,
-            control: true,
-            moveset: [
-                'moveTackle',
-                'moveIceBeam',
-                'moveHyperBeam',
-                'moveGigaImpact'
-            ]
-        }),
-
-        new Entity('Test Dummy',
-        {
-            maxHP: 1000,
-            atk: 10,
-            def: 10,
-            spa: 10,
-            spd: 10,
-            cooldown: 12,
-            nature: 'follow team',
-            solidTiles: [1,2,4,6,7],
-            types: ['normal']
-        }, {
-            x: 24,
-            y: 17
-        }, {
-            color:'black',
-            direction: 'ArrowRight',
-            sprite: 'human2',
-            item: 'leftovers',
-            size: 24,
-            team: 0,
-            control: false,
-            moveset: [
-                'moveTackle',
-                'moveKarateChop',
-                'moveSwordsDance',
-                'moveQuickAttack'
-            ]
-        }),
-
-        new Entity('Random Noob',
-        {
-            maxHP: 10,
-            atk: 10,
-            def: 10,
-            spa: 10,
-            spd: 10,
-            cooldown: 12,
-            nature: 'follow team',
-            solidTiles: [1,2,4,6,7],
-            types: ['normal']
-        }, {
-            x: 53,
-            y: 17
-        }, {
-            color:'black',
-            direction: 'ArrowRight',
-            sprite: 'human2',
-            item: 'none',
-            size: 24,
-            team: 0,
-            control: false,
-            moveset: [
-                'moveTackle',
-                'moveKarateChop',
-                'moveSwordsDance',
-                'moveQuickAttack'
-            ]
-            }),
-
-/*         new Entity('You 3',
-        {
-            maxHP: 10,
-            atk: 10,
-            def: 10,
-            cooldown: 6,
-            nature: 'follow team',
-            solidTiles: [1,2],
-            team: 0,
-            control: false
-        },{
-            x: 2,
-            y: 7
-        }, 'black', 'ArrowRight', 'human2'), */
-
-        new Entity('Figure',{
-            maxHP: 50,
-            atk: 25,
-            def: 20,
-            spa: 10,
-            spd: 20,
-            cooldown: 16,
-            nature: 'attack',
-            solidTiles: [1,2,3,4,7],
-            types: ['fighting']
-        }, {
-            x: 44,
-            y: 29
-        }, {
-            color:'brown',
-            direction: 'ArrowRight',
-            sprite: 'figure',
-            item: 'none',
-            size: 24,
-            team: 1,
-            control: false,
-            moveset: [
-                'moveTackle',
-                'moveKarateChop',
-                'moveSwordsDance',
-                'moveQuickAttack'
-            ]
-            }),
-
-        new Entity('Rush 2',{
-            maxHP: 10,
-            atk: 4,
-            def: 15,
-            spa: 4,
-            spd: 15,
-            cooldown: 8,
-            nature: 'back and forth',
-            solidTiles: [1,2,3,4,7],
-            types: ['dark']
-        }, {
-            x: 25,
-            y: 11
-        }, {
-            color:'brown',
-            direction: 'ArrowRight',
-            sprite: 'rush',
-            item: 'key6',
-            size: 24,
-            team: 1,
-            control: false,
-            moveset: [
-                'moveTackle',
-                'moveKarateChop',
-                'moveSwordsDance',
-                'moveQuickAttack'
-            ]
-        }),
-
-        new Entity('Rush 1',{
-            maxHP: 10,
-            atk: 4,
-            def: 15,
-            spa: 4,
-            spd: 15,
-            cooldown: 8,
-            nature: 'back and forth',
-            solidTiles: [1,2,3,4,7],
-            types: ['dark']
-        }, {
-            x: 29,
-            y: 29
-        },  {
-            color:'brown',
-            direction: 'ArrowUp',
-            sprite: 'rush',
-            item: 'none',
-            size: 24,
-            team: 1,
-            control: false,
-            moveset: [
-                'moveTackle',
-                'moveKarateChop',
-                'moveSwordsDance',
-                'moveQuickAttack'
-            ]
-            }),
-
-        new Entity('Seek',{
-            maxHP: 20,
-            atk: 5,
-            def: 15,
-            spa: 5,
-            spd: 15,
-            cooldown: 11,
-            nature: 'attack',
-            solidTiles: [1,2,3,4,7],
-            types: ['poison']
-        }, {
-            x: 48,
-            y: 1
-        }, {
-            color:'brown',
-            direction: 'ArrowRight',
-            sprite: 'seek',
-            item: 'none',
-            size: 24,
-            team: 1,
-            control: false,
-            moveset: [
-                'moveTackle',
-                'moveKarateChop',
-                'moveSwordsDance',
-                'moveQuickAttack'
-            ]
-        }),
-
-        new Entity('Ambush',{
-            maxHP: 15,
-            atk: 3,
-            def: 15,
-            spa: 3,
-            spd: 15,
-            cooldown: 4,
-            nature: 'back and forth',
-            solidTiles: [1,2,3,4,7],
-            types: ['ghost']
-        }, {
-            x: 39,
-            y: 13
-        }, {
-            color:'brown',
-            direction: 'ArrowRight',
-            sprite: 'ambush',
-            item: 'none',
-            size: 24,
-            team: 1,
-            control: false,
-            moveset: [
-                'moveTackle',
-                'moveKarateChop',
-                'moveSwordsDance',
-                'moveQuickAttack'
-            ]
-        })
-    ];
-    
-    let you = spriteList[0];
-
-    const map = new Map({
-        tiles: mapTiles,
-        mapSprite:'map2',
-        itemSprite:'items', 
-        items: [
-                {
-                    name:'xAtk',
-                    position: {y:4,x:4}
-                },
-                {
-                    name:'potionHeal',
-                    position: {y:4,x:3}
-                },
-                {
-                    name:'potionHeal',
-                    position: {y:13,x:49}
-                },
-                {
-                    name:'potionHeal',
-                    position: {y:10,x:51}
-                },
-                {
-                    name:'xSpe',
-                    position: {y:10,x:52}
-                },
-                {
-                    name:'key1',
-                    position: {y:35,x:29}
-                },
-                {
-                    name:'key2',
-                    position: {y:30,x:37}
-                },
-                {
-                    name:'key3',
-                    position: {y:20,x:50}
-                },
-                {
-                    name:'key4',
-                    position: {y:27,x:53}
-                },
-                {
-                    name:'key5',
-                    position: {y:36,x:53}
-                },
-                
-            ]
-    });
-
-    const actionQueue = [];
-
-    const controls = {
-        'ArrowRight': {x: 1, y: 0},
-        'ArrowLeft': {x: -1, y: 0},
-        'ArrowUp': {x: 0, y: -1},
-        'ArrowDown': {x: 0, y: 1},
-    }
-
-    const arrowNumber = {
-        'ArrowRight': 1,
-        'ArrowLeft': 3,
-        'ArrowUp': 0,
-        'ArrowDown': 2,
-    }
-
-    const opposite = {
-        'ArrowRight': 'ArrowLeft',
-        'ArrowLeft': 'ArrowRight',
-        'ArrowUp': 'ArrowDown',
-        'ArrowDown': 'ArrowUp',
-    }
-
     document.addEventListener('keydown', e => {
         if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Space', 'KeyZ', 'KeyX', 'KeyC', 'KeyV','KeyH','Digit1','Digit2','Digit3','Digit4'].includes(e.code)) {
-            actionQueue.push(e.code);
-            doStuff();
+            game.actionQueue.push(e.code);
+            game.doStuff();
         }
         if (['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) {
             const aliasKey = {
@@ -1117,111 +803,427 @@
                 'KeyS': 'ArrowDown',
                 'KeyD': 'ArrowRight'
             }
-            actionQueue.push(aliasKey[e.code]);
-            doStuff();
+            game.actionQueue.push(aliasKey[e.code]);
+            game.doStuff();
         }
     });
     
     for (const key of ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Space', 'KeyZ', 'KeyX', 'KeyC','KeyV']) {
         document.getElementById(key).addEventListener('click', (e) => {
-            actionQueue.push(key);
-            doStuff();
+            game.actionQueue.push(key);
+            game.doStuff();
         })
     }
 
-    let iter = 0;
+    const game = {
+        actionQueue: [],
 
-    function doStuff() {
-        if (spriteList.filter((sprite) => {return sprite.control}).length == 0) {
-            return true;
-        }
-        const sprite = spriteList[iter];
-        if (!sprite.isAlive()) {
-            sprite.dropItem();
-            spriteList.splice(iter, 1);
-            iter = iter % spriteList.length;
-            drawEverything(you.position);
-            setTimeout(doStuff, 0);
-        } else {
-            sprite.actionCounter--;
-            if (sprite.actionCounter <= 0 && sprite.isAlive()) {
-                if (sprite.control) {
-                    you = sprite;
-                    if (actionQueue.length == 0) {
-                        sprite.actionCounter++;
-                        drawEverything(you.position);
-                        return true;
+        loaded: false,
+
+        you: false,
+
+        map: false,
+
+        spriteList: false,
+
+        iter: 0,
+
+        controls: {
+            'ArrowRight': {x: 1, y: 0},
+            'ArrowLeft': {x: -1, y: 0},
+            'ArrowUp': {x: 0, y: -1},
+            'ArrowDown': {x: 0, y: 1},
+        },
+
+        arrowNumber: {
+            'ArrowRight': 1,
+            'ArrowLeft': 3,
+            'ArrowUp': 0,
+            'ArrowDown': 2,
+        },
+        opposite: {
+            'ArrowRight': 'ArrowLeft',
+            'ArrowLeft': 'ArrowRight',
+            'ArrowUp': 'ArrowDown',
+            'ArrowDown': 'ArrowUp',
+        },
+
+        spawnEntity: function(data) {
+            const d = deepCopy(data);
+            this.spriteList.push(
+                new Entity({
+                    nickname: d.nickname,
+                    stat: deepCopy(speciesList[d.speciesName].stat),
+                    position: d.position,
+                    options: d.options
+                })
+            )
+        },
+
+        loadMap: function(s, m, spawnLocation = false) {
+            this.map = new Map(mapData[m]);
+            this.spriteList = s;
+            //console.log(this.spriteList);
+            this.you = this.spriteList[0];
+            this.loaded = true;
+
+            if (spawnLocation) {
+                for (const sprite of this.spriteList) {
+                    if (sprite.team == 0) {
+                        sprite.position = spawnLocation;
+                    }
+                }
+            }
+
+            for (sprite of this.spriteList) {
+                if (sprite.loaded) {
+                    sprite.generateHPBar();
+                }
+            }
+
+            if (Object.hasOwn(mapData[m], 'entitiesOnSpawn')) {
+                for (data of mapData[m].entitiesOnSpawn) {
+                    this.spawnEntity(data);
+                }
+            }
+
+
+
+            setTimeout(()=>{
+                game.doStuff();
+            }, 500);
+        },
+
+        doStuff: function() {
+            if (this.spriteList.filter((sprite) => {return sprite.control}).length == 0) {
+                return true;
+            }
+            const sprite = this.spriteList[this.iter];
+            
+            if (!sprite.isAlive()) {
+                sprite.dropItem();
+                this.spriteList.splice(this.iter, 1);
+                this.iter = this.iter % this.spriteList.length;
+                this.drawEverything(this.you.position);
+                setTimeout(()=>{game.drawEverything(game.you.position);}, 0);
+            } else {
+                sprite.actionCounter--;
+                if (sprite.actionCounter <= 0 && sprite.isAlive()) {
+                    if (sprite.control) {
+                        this.you = sprite;
+                        if (this.actionQueue.length == 0) {
+                            sprite.actionCounter++;
+                            this.drawEverything(this.you.position);
+                            return true;
+                        } else {
+                            const code = this.actionQueue[0];
+                            if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(code)) {
+                                this.you.move(code);
+                            }
+                            if (code == 'Space') {
+                                onUseMove(this.you, moveList.moveTackle);
+                                //this.you.attack(this.you.getTarget(), 5);
+                            }
+                            if (['Digit1', 'Digit2', 'Digit3', 'Digit4'].includes(code)) {
+                                const n = {'Digit1':0, 'Digit2':1, 'Digit3':2, 'Digit4':3}
+                                this.you.useMove(n[code]);
+                            }
+                            if (code == 'KeyH') {
+                                this.you.heal(1);
+                            }
+                            if (code == 'KeyC') {
+                                this.you.useItem();
+                            }
+                            if (code == 'KeyX') {
+                                this.you.pickUpItem();
+                            }
+                            if (code == 'KeyZ') {
+                                this.you.dropItem();
+                            }
+                            if (code == 'KeyV') {
+                                this.you.wait();
+                            }
+                            this.actionQueue.splice(0,1);
+
+                            if (sprite.actionCounter > 0) {
+                                sprite.endTurn();
+                                this.iter = (this.iter + 1) % this.spriteList.length;
+                            } else {
+                                sprite.actionCounter++;
+                            }
+                            this.drawEverything(this.you.position);
+                            setTimeout(()=>{game.doStuff();}, 500);
+                        }
                     } else {
-                        const code = actionQueue[0];
-                        if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(code)) {
-                            you.move(code);
-                        }
-                        if (code == 'Space') {
-                            onUseMove(you, moveList.moveTackle);
-                            //you.attack(you.getTarget(), 5);
-                        }
-                        if (['Digit1', 'Digit2', 'Digit3', 'Digit4'].includes(code)) {
-                            const n = {'Digit1':0, 'Digit2':1, 'Digit3':2, 'Digit4':3}
-                            you.useMove(n[code]);
-                        }
-                        if (code == 'KeyH') {
-                            you.heal(1);
-                        }
-                        if (code == 'KeyC') {
-                            you.useItem();
-                        }
-                        if (code == 'KeyX') {
-                            you.pickUpItem();
-                        }
-                        if (code == 'KeyZ') {
-                            you.dropItem();
-                        }
-                        if (code == 'KeyV') {
-                            you.wait();
-                        }
-                        actionQueue.splice(0,1);
-
+                        sprite.AIMove();
+                        this.drawEverything(this.you.position);
                         if (sprite.actionCounter > 0) {
                             sprite.endTurn();
-                            iter = (iter + 1) % spriteList.length;
-                        } else {
-                            sprite.actionCounter++;
+                            this.iter = (this.iter + 1) % this.spriteList.length;
                         }
-                        drawEverything(you.position);
-                        setTimeout(doStuff, 500);
+                        setTimeout(()=>{game.doStuff();}, 10);
                     }
                 } else {
-                    sprite.AIMove();
-                    drawEverything(you.position);
-                    if (sprite.actionCounter > 0) {
-                        sprite.endTurn();
-                        iter = (iter + 1) % spriteList.length;
-                    }
-                    setTimeout(doStuff,10);
+                    this.iter = (this.iter + 1) % this.spriteList.length;
+                    setTimeout(()=>{game.doStuff();}, 0);
                 }
-            } else {
-                iter = (iter + 1) % spriteList.length;
-                setTimeout(doStuff,0);
             }
-        }        
-    }
+        },
 
-    function drawEverything(camera) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        map.draw(camera);
-        spriteList.forEach(sprite => {
-            if (sprite.isAlive() && !map.isHidden(sprite.position)) {
-                sprite.draw();
-            };
-            sprite.printTo(dist1(sprite.position, camera) > 5 || !sprite.isAlive());
-        });
-        ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
-        ctx2.drawImage(canvas, 0, 0, canvas2.width, canvas2.height)
+        drawEverything: function(camera) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            this.map.draw(camera);
+            this.spriteList.toReversed().forEach(sprite => {
+                if (sprite.isAlive() && !this.map.isHidden(sprite.position)) {
+                    sprite.draw();
+                };
+                sprite.printTo(dist1(sprite.position, camera) > 5 || !sprite.isAlive());
+            });
+            ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+            ctx2.drawImage(canvas, 0, 0, canvas2.width, canvas2.height);
+        }
     }
+</script>
+<script src = "map.js"></script>
+<script>
+    const spriteList = [
+        new Entity({
+            nickname: 'You',
+            stat: {
+                maxHP: 10,
+                atk: 10,
+                def: 10,
+                spa: 10,
+                spd: 10,
+                cooldown: 12,
+                nature: 'attack',
+                solidTiles: [1,2,4,6,7],
+                types: ['ice'],
+                color:'black'
+            },
+            position: {
+                x: 25, 
+                y: 17
+            },
+            options: {
+                direction: 'ArrowRight',
+                sprite: 'human',
+                item: 'none',
+                size: 24,
+                team: 0,
+                control: true,
+                moveset: [
+                    'moveTackle',
+                    'moveIceBeam',
+                    'moveHyperBeam',
+                    'moveGigaImpact'
+                ]
+            }
+        }),
 
-    resize();
+        new Entity({
+            nickname: 'Random Noob',
+            stat: {
+                maxHP: 10,
+                atk: 10,
+                def: 10,
+                spa: 10,
+                spd: 10,
+                cooldown: 12,
+                nature: 'follow team',
+                solidTiles: [1,2,4,6,7],
+                types: ['normal'],
+                color:'black'
+            },
+            position: {
+                x: 53,
+                y: 17
+            },
+            options: {
+                direction: 'ArrowRight',
+                sprite: 'human2',
+                item: 'none',
+                size: 24,
+                team: 0,
+                control: false,
+                moveset: [
+                    'moveTackle',
+                    'moveKarateChop',
+                    'moveSwordsDance',
+                    'moveQuickAttack'
+                ]
+            }
+        })
+
+/*         new Entity('Figure',{
+            stat: {
+                maxHP: 50,
+                atk: 25,
+                def: 20,
+                spa: 10,
+                spd: 20,
+                cooldown: 16,
+                nature: 'attack',
+                solidTiles: [1,2,3,4,7],
+                types: ['fighting'],
+                color:'brown'
+            },
+            position: {
+                x: 44,
+                y: 29
+            },
+            options: {
+                direction: 'ArrowRight',
+                sprite: 'figure',
+                item: 'none',
+                size: 24,
+                team: 1,
+                control: false,
+                moveset: [
+                    'moveTackle',
+                    'moveKarateChop',
+                    'moveSwordsDance',
+                    'moveQuickAttack'
+                ]
+            }
+            }),
+
+        new Entity('Rush 2',{
+            stat: {
+                maxHP: 10,
+                atk: 4,
+                def: 15,
+                spa: 4,
+                spd: 15,
+                cooldown: 8,
+                nature: 'back and forth',
+                solidTiles: [1,2,3,4,7],
+                types: ['dark'],
+                color:'brown'
+            },
+            position: {
+                x: 25,
+                y: 11
+            },
+            options: {
+                direction: 'ArrowRight',
+                sprite: 'rush',
+                item: 'key6',
+                size: 24,
+                team: 1,
+                control: false,
+                moveset: [
+                    'moveTackle',
+                    'moveKarateChop',
+                    'moveSwordsDance',
+                    'moveQuickAttack'
+                ]
+            }
+        }),
+
+        new Entity('Rush 1',{
+            stat: {
+                maxHP: 10,
+                atk: 4,
+                def: 15,
+                spa: 4,
+                spd: 15,
+                cooldown: 8,
+                nature: 'back and forth',
+                solidTiles: [1,2,3,4,7],
+                types: ['dark'],
+                color:'brown'
+            }, 
+            position: {
+                x: 29,
+                y: 29
+            },
+            options: {
+                direction: 'ArrowUp',
+                sprite: 'rush',
+                item: 'none',
+                size: 24,
+                team: 1,
+                control: false,
+                moveset: [
+                    'moveTackle',
+                    'moveKarateChop',
+                    'moveSwordsDance',
+                    'moveQuickAttack'
+                ]
+            }
+            }),
+
+        new Entity('Seek',{
+            stat: {
+                maxHP: 20,
+                atk: 5,
+                def: 15,
+                spa: 5,
+                spd: 15,
+                cooldown: 11,
+                nature: 'attack',
+                solidTiles: [1,2,3,4,7],
+                types: ['poison'],
+                color:'brown'
+            },
+            position: {
+                x: 48,
+                y: 1
+            },
+            options: {
+                direction: 'ArrowRight',
+                sprite: 'seek',
+                item: 'none',
+                size: 24,
+                team: 1,
+                control: false,
+                moveset: [
+                    'moveTackle',
+                    'moveKarateChop',
+                    'moveSwordsDance',
+                    'moveQuickAttack'
+                ]
+            }
+        }),
+
+        new Entity('Ambush',{
+            stat: {
+                maxHP: 15,
+                atk: 3,
+                def: 15,
+                spa: 3,
+                spd: 15,
+                cooldown: 4,
+                nature: 'back and forth',
+                solidTiles: [1,2,3,4,7],
+                types: ['ghost'],
+                color:'brown',
+            }, 
+            position: {
+                x: 39,
+                y: 13
+            },
+            options: {
+                direction: 'ArrowRight',
+                sprite: 'ambush',
+                size: 24,
+                item: 'none',
+                team: 1,
+                control: false,
+                moveset: [
+                    'moveTackle',
+                    'moveKarateChop',
+                    'moveSwordsDance',
+                    'moveQuickAttack'
+                ]
+            }
+        }) */
+    ];
     //alert('Escape the hotel. Beware the entities!');
-    setTimeout(doStuff, 500);
+    resize();
+    game.loadMap(spriteList, 'doors');
+    //setTimeout(game.doStuff, 500);
     
 </script>
 

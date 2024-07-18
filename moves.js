@@ -218,7 +218,7 @@ const moveList = {
 function onUseMove(user, move) {
     console.log(`${user.name} used ${move.name}!`)
     const targets = move.getTargets(user);
-    if (!map.isHidden(user.position) && user.isAlive()) {
+    if (!game.map.isHidden(user.position) && user.isAlive()) {
         const userFailed = userFailCheck(user, targets, move) 
         if (!userFailed) {
             let spreadModifier = false;
@@ -227,7 +227,7 @@ function onUseMove(user, move) {
             }
             let hitAny = false;
             for (const target of targets) {
-                if (!map.isHidden(target.position)) {
+                if (!game.map.isHidden(target.position)) {
                     const targetFailed = targetFailCheck(user, target, move);
                     if (!targetFailed) {
                         hitAny = true;
