@@ -59,10 +59,7 @@ const mapData = {
                     team: 1,
                     control: false,
                     moveset: [
-                        'moveTackle',
                         'moveKarateChop',
-                        'moveSwordsDance',
-                        'moveQuickAttack'
                     ]
                 }
             },
@@ -81,10 +78,7 @@ const mapData = {
                     team: 1,
                     control: false,
                     moveset: [
-                        'moveTackle',
-                        'moveKarateChop',
-                        'moveSwordsDance',
-                        'moveQuickAttack'
+                        'moveDarkPulse',
                     ]
                 }
             },
@@ -103,10 +97,7 @@ const mapData = {
                     team: 1,
                     control: false,
                     moveset: [
-                        'moveTackle',
-                        'moveKarateChop',
-                        'moveSwordsDance',
-                        'moveQuickAttack'
+                        'moveDarkPulse',
                     ]
                 }
             },
@@ -125,10 +116,7 @@ const mapData = {
                     team: 1,
                     control: false,
                     moveset: [
-                        'moveTackle',
-                        'moveKarateChop',
-                        'moveSwordsDance',
-                        'moveQuickAttack'
+                        'moveSludgeBomb',
                     ]
                 }
             },
@@ -147,10 +135,7 @@ const mapData = {
                     team: 1,
                     control: false,
                     moveset: [
-                        'moveTackle',
-                        'moveKarateChop',
-                        'moveSwordsDance',
-                        'moveQuickAttack'
+                        'moveDarkPulse',
                     ]
                 }
             },
@@ -235,10 +220,7 @@ const mapData = {
                     team: 1,
                     control: false,
                     moveset: [
-                        'moveTackle',
-                        'moveKarateChop',
-                        'moveSwordsDance',
-                        'moveQuickAttack'
+                        'moveRecover',
                     ]
                 }
             }

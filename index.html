@@ -396,7 +396,8 @@
         }
 
         useMove(n = 0) {
-            onUseMove(this, moveList[this.moveset[n]]);
+            onUseMove(this, moveList[this.moveset[n]], {});
+            game.moveUsed = {user: this, move: moveList[this.moveset[n]]};
         }
 
         getTarget() {
@@ -576,7 +577,7 @@
                         const d = dist(this.position, target.position);
                         const d1 = dist1(this.position, target.position);
                         if (d == 1) {
-                            onUseMove(this, moveList.moveTackle);
+                            this.useMove();
                         } else {
                             if (d > 1 && d1 < 9) {
                                 const s = this.smartGetDistance(addCoords(target.position, game.controls[game.opposite[target.direction]]));
@@ -633,7 +634,7 @@
                     if (targets.length > 0) {
                         this.turnToward(targets[0].position);
                         this.stat.nature = 'attack';
-                        onUseMove(this, moveList.moveTackle);
+                        this.useMove();
                     } else {
                         if (this.getTarget()) {
                             this.direction = game.opposite[this.direction];
@@ -819,7 +820,10 @@
     }
 
     const game = {
+
         actionQueue: [],
+
+        moveUsed: false,
 
         loaded: false,
 
@@ -924,7 +928,7 @@
                                 this.you.move(code);
                             }
                             if (code == 'Space') {
-                                onUseMove(this.you, moveList.moveTackle);
+                                this.you.useMove();
                                 //this.you.attack(this.you.getTarget(), 5);
                             }
                             if (['Digit1', 'Digit2', 'Digit3', 'Digit4'].includes(code)) {
@@ -964,7 +968,7 @@
                             sprite.endTurn();
                             this.iter = (this.iter + 1) % this.spriteList.length;
                         }
-                        setTimeout(()=>{game.doStuff();}, 10);
+                        setTimeout(()=>{game.doStuff();}, 50);
                     }
                 } else {
                     this.iter = (this.iter + 1) % this.spriteList.length;
@@ -1013,10 +1017,14 @@
                 });
                 
             }
+
+            if (this.moveUsed) {
+                moveAnimation.draw(this.moveUsed.user, this.moveUsed.move, {ctx: ctx});
+                this.moveUsed = false;
+            }
+
             ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
             ctx2.drawImage(canvas, 0, 0, canvas2.width, canvas2.height);
-
-
         }
     }
 </script>

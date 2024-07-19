@@ -1,11 +1,17 @@
+const attackPatterns = {
+    front: [{x:1, y:0}],
+    beam: [{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}],
+    wedge: [{x:1, y:0}, {x:1, y:1}, {x:1, y:-1}, {x:2, y:0}],
+    ring: [{x:1, y:0}, {x:0, y:1}, {x:-1, y:0}, {x:0, y:-1}],
+    spread: [{x:1, y:0}, {x:-1, y:0}, {x:0, y:1}, {x:0, y:-1}, {x:1, y:1}, {x:1, y:-1}, {x:-1, y:1}, {x:-1, y:-1}],
+}
+
 const moveList = {
     moveTackle: {
         name:'Tackle',
         type: 'normal',
         category: 'physical',
-        getTargets: function(user) {
-            return user.getFrontSprites([{x:1, y:0}]);
-        },
+        pattern: 'front',
         basePower: 40,
         baseAccuracy: 100,
         description: ''
@@ -15,9 +21,7 @@ const moveList = {
         name:'Quick Attack',
         type: 'normal',
         category: 'physical',
-        getTargets: function(user) {
-            return user.getFrontSprites([{x:1, y:0}]);
-        },
+        pattern: 'front',
         basePower: 30,
         baseAccuracy: 100,
         userSecondaryEffect: function(user) {
@@ -30,9 +34,7 @@ const moveList = {
         name:'Karate Chop',
         type: 'fighting',
         category: 'physical',
-        getTargets: function(user) {
-            return user.getFrontSprites([{x:1, y:0}]);
-        },
+        pattern: 'front',
         basePower: 50,
         baseAccuracy: 100,
         description: ''
@@ -42,9 +44,7 @@ const moveList = {
         name:'Ice Beam',
         type: 'ice',
         category: 'special',
-        getTargets: function(user) {
-            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}]);
-        },
+        pattern: 'beam',
         basePower: 90,
         baseAccuracy: 100,
         targetSecondaryEffect: function(target) {
@@ -59,9 +59,7 @@ const moveList = {
         name:'Flamethrower',
         type: 'fire',
         category: 'special',
-        getTargets: function(user) {
-            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}]);
-        },
+        pattern: 'beam',
         basePower: 90,
         baseAccuracy: 100,
         targetSecondaryEffect: function(target) {
@@ -76,9 +74,7 @@ const moveList = {
         name:'Thunderbolt',
         type: 'electric',
         category: 'special',
-        getTargets: function(user) {
-            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}]);
-        },
+        pattern: 'beam',
         basePower: 90,
         baseAccuracy: 100,
         targetSecondaryEffect: function(target) {
@@ -93,13 +89,11 @@ const moveList = {
         name:'Sludge Bomb',
         type: 'poison',
         category: 'special',
-        getTargets: function(user) {
-            return user.getFrontSprites([{x:1, y:0}, {x:1, y:1}, {x:1, y:-1}, {x:2, y:0}]);
-        },
+        pattern: 'wedge',
         basePower: 90,
         baseAccuracy: 100,
         targetSecondaryEffect: function(target) {
-            if (true || Math.floor(Math.random() * 100) < 30) {
+            if (Math.floor(Math.random() * 100) < 30) {
                 target.inflictStatus('poison', 3);
             }
         },
@@ -110,9 +104,7 @@ const moveList = {
         name:'Earthquake',
         type: 'ground',
         category: 'physical',
-        getTargets: function(user) {
-            return user.getNearbySprites(5);
-        },
+        pattern: 'spread',
         basePower: 100,
         baseAccuracy: 100,
         description: ''
@@ -122,9 +114,7 @@ const moveList = {
         name:'Dragon Pulse',
         type: 'dragon',
         category: 'special',
-        getTargets: function(user) {
-            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}]);
-        },
+        pattern: 'beam',
         basePower: 85,
         baseAccuracy: Infinity,
         description: ''
@@ -134,9 +124,7 @@ const moveList = {
         name:'Aeropulse',
         type: 'flying',
         category: 'special',
-        getTargets: function(user) {
-            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}]);
-        },
+        pattern: 'beam',
         basePower: 85,
         baseAccuracy: Infinity,
         description: ''
@@ -146,9 +134,7 @@ const moveList = {
         name:'Dark Pulse',
         type: 'dark',
         category: 'special',
-        getTargets: function(user) {
-            return user.getAdjacentSprites(1);
-        },
+        pattern: 'ring',
         basePower: 80,
         baseAccuracy: Infinity,
         description: ''
@@ -158,9 +144,7 @@ const moveList = {
         name:'Hyper Beam',
         type: 'normal',
         category: 'special',
-        getTargets: function(user) {
-            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}]);
-        },
+        pattern: 'beam',
         basePower: 150,
         baseAccuracy: 90,
         userSecondaryEffect: function(user) {
@@ -173,9 +157,7 @@ const moveList = {
         name:'Giga Impact',
         type: 'normal',
         category: 'physical',
-        getTargets: function(user) {
-            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:1, y:1}, {x:1, y:-1}]);
-        },
+        pattern: 'wedge',
         basePower: 150,
         baseAccuracy: 90,
         userSecondaryEffect: function(user) {
@@ -188,9 +170,7 @@ const moveList = {
         name:'Swords Dance',
         type: 'normal',
         category: 'status',
-        getTargets: function(user) {
-            return [user];
-        },
+        pattern: 'self',
         baseAccuracy: Infinity,
         userSecondaryEffect: function(user) {
             user.changeStatStage('atk', 10);
@@ -202,9 +182,7 @@ const moveList = {
         name:'Iron Defense',
         type: 'steel',
         category: 'status',
-        getTargets: function(user) {
-            return [user];
-        },
+        pattern: 'self',
         baseAccuracy: Infinity,
         userSecondaryEffect: function(user) {
             user.changeStatStage('def', 10);
@@ -216,9 +194,7 @@ const moveList = {
         name:'Recover',
         type: 'normal',
         category: 'status',
-        getTargets: function(user) {
-            return [user];
-        },
+        pattern: 'self',
         baseAccuracy: Infinity,
         userSecondaryEffect: function(user) {
             user.heal(Math.floor(user.stat.maxHP / 2));
@@ -230,9 +206,7 @@ const moveList = {
         name:'Roost',
         type: 'flying',
         category: 'status',
-        getTargets: function(user) {
-            return [user];
-        },
+        pattern: 'self',
         baseAccuracy: Infinity,
         userSecondaryEffect: function(user) {
             user.heal(Math.floor(user.stat.maxHP / 2));
@@ -241,12 +215,13 @@ const moveList = {
     }
 }
 
-function onUseMove(user, move) {
+function onUseMove(user, move, options) {
     console.log(`${user.name} used ${move.name}!`)
-    const targets = move.getTargets(user);
+    const targets = getTargets(user, move.pattern);
     if (!game.map.isHidden(user.position) && user.isAlive()) {
         const userFailed = userFailCheck(user, targets, move) 
         if (!userFailed) {
+            //moveAnimation.draw(user, move, options)
             let spreadModifier = false;
             if (targets.length > 1) {
                 spreadModifier = true;
@@ -255,6 +230,7 @@ function onUseMove(user, move) {
             for (const target of targets) {
                 if (!game.map.isHidden(target.position)) {
                     const targetFailed = targetFailCheck(user, target, move);
+                    
                     if (!targetFailed) {
                         hitAny = true;
                         if (move.category != 'status') {
@@ -278,6 +254,14 @@ function onUseMove(user, move) {
         }
     }
     user.applyCooldown();
+}
+
+function getTargets(user, pattern) {
+    if (pattern == 'self') {
+        return [user];
+    } else {
+        return user.getFrontSprites(attackPatterns[pattern])
+    }
 }
 
 function userFailCheck(user, targets, move) {
@@ -601,3 +585,46 @@ const typeChart = {
         }, 1);
     }
 }
+
+const moveAnimation = {
+    image: new Image(),
+    loaded: false,
+
+    load: function() {
+        this.image.src = `sprites/pokemon/moveEffects.png`;
+        this.image.onload = () => {this.loaded = true};
+    },
+
+    fromType: {
+        'normal': 1,
+        'fighting': 5,
+        'flying': 4,
+        'poison': 6,
+        'ground': 0,
+        'rock': 0,
+        'bug': 0,
+        'ghost': 0,
+        'steel': 0,
+        'fire': 3,
+        'water': 0,
+        'grass': 0,
+        'electric': 0,
+        'psychic': 0,
+        'ice': 2,
+        'dark': 7,
+        'dragon': 0,
+        'fairy': 0,
+    },
+
+    draw: function (user, move, options) {
+        const c = options.ctx;
+        if (move.pattern != 'self') {
+            attackPatterns[move.pattern].forEach((tile) => {
+                const coords = screenCoords(addCoords(user.position, rotate(user.direction, tile)));
+                c.drawImage(this.image, 24 * this.fromType[move.type], 0, 24, 24, coords.x, coords.y, 24, 24);
+            })
+        }
+    }
+}
+
+moveAnimation.load();
