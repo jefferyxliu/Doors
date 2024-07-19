@@ -43,7 +43,7 @@ const moveList = {
         type: 'ice',
         category: 'special',
         getTargets: function(user) {
-            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:3, y:0}]);
+            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}]);
         },
         basePower: 90,
         baseAccuracy: 100,
@@ -60,7 +60,7 @@ const moveList = {
         type: 'fire',
         category: 'special',
         getTargets: function(user) {
-            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:3, y:0}]);
+            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}]);
         },
         basePower: 90,
         baseAccuracy: 100,
@@ -77,7 +77,7 @@ const moveList = {
         type: 'electric',
         category: 'special',
         getTargets: function(user) {
-            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:3, y:0}]);
+            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}]);
         },
         basePower: 90,
         baseAccuracy: 100,
@@ -94,7 +94,7 @@ const moveList = {
         type: 'poison',
         category: 'special',
         getTargets: function(user) {
-            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}]);
+            return user.getFrontSprites([{x:1, y:0}, {x:1, y:1}, {x:1, y:-1}, {x:2, y:0}]);
         },
         basePower: 90,
         baseAccuracy: 100,
@@ -123,7 +123,19 @@ const moveList = {
         type: 'dragon',
         category: 'special',
         getTargets: function(user) {
-            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:3, y:0}]);
+            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}]);
+        },
+        basePower: 85,
+        baseAccuracy: Infinity,
+        description: ''
+    },
+
+    moveAeropulse: {
+        name:'Aeropulse',
+        type: 'flying',
+        category: 'special',
+        getTargets: function(user) {
+            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}]);
         },
         basePower: 85,
         baseAccuracy: Infinity,
@@ -147,7 +159,7 @@ const moveList = {
         type: 'normal',
         category: 'special',
         getTargets: function(user) {
-            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:3, y:0}]);
+            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}]);
         },
         basePower: 150,
         baseAccuracy: 90,
@@ -162,7 +174,7 @@ const moveList = {
         type: 'normal',
         category: 'physical',
         getTargets: function(user) {
-            return user.getFrontSprites([{x:1, y:0}]);
+            return user.getFrontSprites([{x:1, y:0}, {x:2, y:0}, {x:1, y:1}, {x:1, y:-1}]);
         },
         basePower: 150,
         baseAccuracy: 90,
@@ -177,7 +189,7 @@ const moveList = {
         type: 'normal',
         category: 'status',
         getTargets: function(user) {
-            return user;
+            return [user];
         },
         baseAccuracy: Infinity,
         userSecondaryEffect: function(user) {
@@ -191,7 +203,7 @@ const moveList = {
         type: 'steel',
         category: 'status',
         getTargets: function(user) {
-            return user;
+            return [user];
         },
         baseAccuracy: Infinity,
         userSecondaryEffect: function(user) {
@@ -205,7 +217,21 @@ const moveList = {
         type: 'normal',
         category: 'status',
         getTargets: function(user) {
-            return user;
+            return [user];
+        },
+        baseAccuracy: Infinity,
+        userSecondaryEffect: function(user) {
+            user.heal(Math.floor(user.stat.maxHP / 2));
+        },
+        description: ''
+    },
+
+    moveRoost: {
+        name:'Roost',
+        type: 'flying',
+        category: 'status',
+        getTargets: function(user) {
+            return [user];
         },
         baseAccuracy: Infinity,
         userSecondaryEffect: function(user) {

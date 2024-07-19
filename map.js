@@ -198,21 +198,26 @@ const mapData = {
                 position: {y:36,x:53}
             } 
         ],
-        mapSprite:'map2',
+        mapSprite:'hotel',
         itemSprite:'items'
     },
 
     test: {
         tiles: [
-            [1,1,1,1,1,1,1,1],
-            [1,9,0,0,0,0,0,1],
-            [1,1,1,1,1,1,1,1]
+            [1,1,2,2,2,2,1,1],
+            [1,0,0,0,0,0,0,1],
+            [2,0,2,0,0,2,0,2],
+            [2,0,0,0,0,0,0,2],
+            [2,0,0,0,0,0,0,2],
+            [2,0,2,0,0,2,0,2],
+            [1,0,0,0,0,0,0,1],
+            [1,1,2,2,2,2,1,1]
         ],
         warpZones: {
             '1,1': {name: 'doors', spawnLocation: {x:23, y:17}}
         },
         items: [],
-        mapSprite:'map2',
+        mapSprite:'pokemon/esirykTower',
         itemSprite:'items',
         entitiesOnSpawn: [
             {

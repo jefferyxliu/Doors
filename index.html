@@ -535,7 +535,7 @@
         draw() {
             const coords = screenCoords(this.position);
             if (this.sprite && this.loaded) {
-                ctx.drawImage(this.image, this.size * game.arrowNumber[this.direction], 0, this.size, this.size, coords.x, coords.y, Math.floor(canvas.width / w), Math.floor(canvas.height / h));
+                ctx.drawImage(this.image, this.size * game.arrowNumber[this.direction], 0, this.size, this.size, coords.x - Math.floor(this.size/2) + 12, coords.y - this.size + 24, this.size, this.size);
             } 
 /*             else {
                 ctx.fillStyle = this.color;
@@ -681,9 +681,12 @@
             this.tiles = options.tiles;
             this.sprite = options.mapSprite;
             this.warpZones = options.warpZones;
+            this.tileHeight = 48;
+            this.tileWidth = 24;
             this.tileSize = 24;
+
             if (this.sprite) {
-                this.image = new Image(this.tileSize, this.tileSize);
+                this.image = new Image();
                 this.image.src = `sprites/${this.sprite}.png`;
                 this.loaded = false;
                 this.image.onload = () => {this.loaded = true};
@@ -691,7 +694,7 @@
             this.items = options.items;
             this.itemSprite = options.itemSprite;
             if (this.itemSprite) {
-                this.imageItem = new Image(this.tileSize, this.tileSize);
+                this.imageItem = new Image();
                 this.imageItem.src = `sprites/${this.itemSprite}.png`;
                 this.loadedItem = false;
                 this.imageItem.onload = () => {this.loadedItem = true};
@@ -763,8 +766,8 @@
                 for (let j = 0; j < this.tiles[i].length; j++) {
                     const coords = screenCoords({x: j, y: i});
                     if (this.sprite && this.loaded && dist1(camera, {x: j, y: i}) < 6) {
-                        ctx.drawImage(this.image, this.tileSize * this.tiles[i][j], 0, this.tileSize, this.tileSize, coords.x, coords.y, Math.floor(canvas.width / w), Math.floor(canvas.height / h));
-                    } 
+                        ctx.drawImage(this.image, 24 * this.tiles[i][j], 0, 24, 48, coords.x, coords.y-24, 24, 48);
+                    }
                     /* else {
                         if (this.tiles[i][j] && dist1(camera, {x: j, y: i}) < 6) {
                             ctx.fillStyle = this.color;
@@ -861,7 +864,7 @@
         },
 
         loadMap: function(s, m, spawnLocation = false) {
-            this.map = new Map(mapData[m]);
+            this.map = new Map(deepCopy(mapData[m]));
             this.spriteList = s;
             //console.log(this.spriteList);
             this.you = this.spriteList[0];
@@ -972,15 +975,48 @@
 
         drawEverything: function(camera) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            this.map.draw(camera);
-            this.spriteList.toReversed().forEach(sprite => {
-                if (sprite.isAlive() && !this.map.isHidden(sprite.position)) {
-                    sprite.draw();
-                };
-                sprite.printTo(dist1(sprite.position, camera) > 5 || !sprite.isAlive());
-            });
+            //this.map.draw(camera);
+            if (!(this.map.loaded)) {
+                ctx.fillStyle = 'white';
+                ctx.font = "bold 24px monospace";
+                ctx.fillText('Loading...', 5, 25);
+            }
+            for (let i = 0; i < this.map.tiles.length; i++) {
+                for (let j = 0; j < this.map.tiles[i].length; j++) {
+                    const coords = screenCoords({x: j, y: i});
+                    if (this.map.sprite && this.map.loaded && dist1(camera, {x: j, y: i}) < 6) {
+                        ctx.drawImage(this.map.image, 24 * this.map.tiles[i][j], 0, 24, 48, coords.x, coords.y - 24, 24, 48);
+                    }
+                }
+
+                this.map.items.filter((item)=>{return item.position.y == i}).forEach((item) => {
+                    const coords = screenCoords(item.position);
+
+                    if (this.map.itemSprite && this.map.loadedItem && dist1(camera, item.position) < 6) {
+                        const it = itemList[item.name];
+                        let i = 0;
+                        if (Object.hasOwn(it, 'spriteIndex')) {
+                            i = it.spriteIndex;
+                        }
+                        ctx.drawImage(this.map.imageItem, 24 * i, 0, 24, 24, coords.x, coords.y, 24, 24);
+                    } else {
+                        ctx.fillStyle = 'red';
+                        ctx.fillRect(coords.x, coords.y, Math.floor(canvas.width / w / 2), Math.floor(canvas.height / h / 2));
+                    }
+                })
+
+                this.spriteList.filter((sprite)=>{return sprite.position.y == i;}).toReversed().forEach(sprite => {
+                    if (sprite.isAlive() && !this.map.isHidden(sprite.position)) {
+                        sprite.draw();
+                    };
+                    sprite.printTo(dist1(sprite.position, camera) > 5 || !sprite.isAlive());
+                });
+                
+            }
             ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
             ctx2.drawImage(canvas, 0, 0, canvas2.width, canvas2.height);
+
+
         }
     }
 </script>
@@ -1219,12 +1255,55 @@
                 ]
             }
         }) */
-    ];
+    ]; 
+
     alert('Escape the hotel. Beware the entities!');
     resize();
     game.loadMap(spriteList, 'doors');
     //setTimeout(game.doStuff, 500);
-    
+
+    function secretTest() {
+        
+        const coord = game.you.position;
+        game.spriteList[0] = new Entity({
+            nickname: 'Sanctuavia',
+            stat: {
+                maxHP: 85,
+                atk: 70,
+                def: 85,
+                spa: 120,
+                spd: 95,
+                cooldown: 8,
+                nature: 'attack',
+                solidTiles: [1,2,4,7],
+                types: ['flying'],
+                color:'black'
+            },
+            position: {
+                x: 25, 
+                y: 17
+            },
+            options: {
+                direction: 'ArrowRight',
+                sprite: 'pokemon/sanctuavia',
+                item: 'none',
+                size: 32,
+                team: 0,
+                control: true,
+                moveset: [
+                    'moveAeropulse',
+                    'moveIceBeam',
+                    'moveFlamethrower',
+                    'moveRoost'
+                ]
+            }
+        });
+        game.you = game.spriteList[0];
+        game.you.position = coord;
+        game.map.tiles[17][23] = 9;
+        setTimeout(()=>{game.drawEverything(game.you.position);}, 500);
+    }
+    //secretTest();
 </script>
 
 </html>
