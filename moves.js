@@ -85,6 +85,26 @@ const moveList = {
         description: ''
     },
 
+    moveSurf: {
+        name:'Surf',
+        type: 'water',
+        category: 'special',
+        pattern: 'spread',
+        basePower: 90,
+        baseAccuracy: 100,
+        description: ''
+    },
+
+    moveHydroPump: {
+        name:'Hydro Pump',
+        type: 'water',
+        category: 'special',
+        pattern: 'beam',
+        basePower: 110,
+        baseAccuracy: 85,
+        description: ''
+    },
+
     moveSludgeBomb: {
         name:'Sludge Bomb',
         type: 'poison',
@@ -95,6 +115,21 @@ const moveList = {
         targetSecondaryEffect: function(target) {
             if (Math.floor(Math.random() * 100) < 30) {
                 target.inflictStatus('poison', 3);
+            }
+        },
+        description: ''
+    },
+
+    moveEarthPower: {
+        name:'Earth Power',
+        type: 'ground',
+        category: 'special',
+        pattern: 'wedge',
+        basePower: 90,
+        baseAccuracy: 100,
+        targetSecondaryEffect: function(target) {
+            if (Math.floor(Math.random() * 100) < 10) {
+                target.changeStatStage('spd', -10);
             }
         },
         description: ''
@@ -126,6 +161,16 @@ const moveList = {
         category: 'special',
         pattern: 'beam',
         basePower: 85,
+        baseAccuracy: Infinity,
+        description: ''
+    },
+
+    moveAuraSphere: {
+        name:'Aura Sphere',
+        type: 'fighting',
+        category: 'special',
+        pattern: 'beam',
+        basePower: 90,
         baseAccuracy: Infinity,
         description: ''
     },
@@ -600,15 +645,15 @@ const moveAnimation = {
         'fighting': 5,
         'flying': 4,
         'poison': 6,
-        'ground': 0,
+        'ground': 10,
         'rock': 0,
         'bug': 0,
         'ghost': 0,
         'steel': 0,
         'fire': 3,
-        'water': 0,
+        'water': 8,
         'grass': 0,
-        'electric': 0,
+        'electric': 9,
         'psychic': 0,
         'ice': 2,
         'dark': 7,

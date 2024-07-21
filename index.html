@@ -234,6 +234,8 @@
             this.item = data.options.item;
             this.statusEffects = {};
 
+            this.solidTiles = this.getSolidTiles();
+
             this.sprite = data.options.sprite;
             this.size = data.options.size;
 
@@ -259,6 +261,37 @@
 
         isAlive() {
             return this.HP > 0;
+        }
+
+        getSolidTiles() {
+            let t = [];
+            const tileType = {
+                'floor' : [0,1,2,3,4], //all
+                'hidden' : [5], //player
+                'wall' : [6,7,8,9,10], //none
+                'enemy' : [11], //only enemy cross
+                'air' : [12,13], //flying types
+                'water' : [14,15], //flying and water types
+                'lava' : [17,18], //flying and fire types
+            }
+
+            t = t.concat(tileType['wall']);
+            if (!this.team == 0) {
+                t = t.concat(tileType['hidden']);
+            }
+            if (this.team == 0) {
+                t = t.concat(tileType['enemy']);
+            }
+            if (!this.types.includes('flying')) {
+                t = t.concat(tileType['air']);
+            }
+            if (!this.types.includes('water')) {
+                t = t.concat(tileType['water']);
+            }
+            if (!this.types.includes('fire')) {
+                t = t.concat(tileType['lava']);
+            }
+            return t;
         }
 
         getItem() {
@@ -402,7 +435,7 @@
 
         getTarget() {
             const fr = addCoords(this.position, game.controls[this.direction]);
-            if (game.map.isWall(fr, this.stat.solidTiles)) {
+            if (game.map.isWall(fr, this.solidTiles)) {
                 return 'wall';
             } else {
                 const s = game.spriteList.filter((sprite) => 
@@ -557,7 +590,7 @@
             };
             for (const direction in distances) {
                 const fr = addCoords(this.position, game.controls[direction]);
-                if (!game.map.isWall(fr, this.stat.solidTiles)) {
+                if (!game.map.isWall(fr, this.solidTiles)) {
                     distances[direction] = dist(fr, targetPosition);
                 }
             }
@@ -731,7 +764,7 @@
             return coord.x >= 0 && coord.y >= 0 && coord.x < this.tiles[0].length && coord.y < this.tiles.length;
         }
 
-        isWall(coord, solidTiles = [1, 2]) {
+        isWall(coord, solidTiles = [6, 7, 8, 9, 10]) {
             if (this.inRange(coord)) {
                 return solidTiles.includes(this.tiles[coord.y][coord.x]);
             }
@@ -740,7 +773,7 @@
             }
         }
 
-        isHidden(coord, hiddenTiles = [3]) {
+        isHidden(coord, hiddenTiles = [5]) {
             if (this.inRange(coord)) {
                 return hiddenTiles.includes(this.tiles[coord.y][coord.x]);
             }
@@ -757,7 +790,7 @@
             }
         }
 
-        draw(camera) {
+/*         draw(camera) {
             if (!(this.loaded)) {
                 ctx.fillStyle = 'white';
                 ctx.font = "bold 24px monospace";
@@ -766,15 +799,17 @@
             for (let i = 0; i < this.tiles.length; i++) {
                 for (let j = 0; j < this.tiles[i].length; j++) {
                     const coords = screenCoords({x: j, y: i});
+                    const col = this.tiles[i][j] % 6;
+                    const row = Math.floor(this.tiles[i][j] / 6);
                     if (this.sprite && this.loaded && dist1(camera, {x: j, y: i}) < 6) {
-                        ctx.drawImage(this.image, 24 * this.tiles[i][j], 0, 24, 48, coords.x, coords.y-24, 24, 48);
+                        ctx.drawImage(this.image, 24 * col, 10, 24, 48, coords.x, coords.y - 24, 24, 48);
                     }
-                    /* else {
+                    else {
                         if (this.tiles[i][j] && dist1(camera, {x: j, y: i}) < 6) {
                             ctx.fillStyle = this.color;
                             ctx.fillRect(coords.x, coords.y, Math.floor(canvas.width / w), Math.floor(canvas.height / h));
                         }
-                    } */
+                    }
                 }
             }
             for (const item of this.items) {
@@ -792,7 +827,7 @@
                     ctx.fillRect(coords.x, coords.y, Math.floor(canvas.width / w / 2), Math.floor(canvas.height / h / 2));
                 }
             }
-        }
+        } */
     }
 
     document.addEventListener('keydown', e => {
@@ -968,7 +1003,7 @@
                             sprite.endTurn();
                             this.iter = (this.iter + 1) % this.spriteList.length;
                         }
-                        setTimeout(()=>{game.doStuff();}, 50);
+                        setTimeout(()=>{game.doStuff();}, dist1(sprite.position, this.you.position) < 6 ? 50 : 0);
                     }
                 } else {
                     this.iter = (this.iter + 1) % this.spriteList.length;
@@ -988,8 +1023,10 @@
             for (let i = 0; i < this.map.tiles.length; i++) {
                 for (let j = 0; j < this.map.tiles[i].length; j++) {
                     const coords = screenCoords({x: j, y: i});
+                    const col = this.map.tiles[i][j] % 6;
+                    const row = Math.floor(this.map.tiles[i][j] / 6);
                     if (this.map.sprite && this.map.loaded && dist1(camera, {x: j, y: i}) < 6) {
-                        ctx.drawImage(this.map.image, 24 * this.map.tiles[i][j], 0, 24, 48, coords.x, coords.y - 24, 24, 48);
+                        ctx.drawImage(this.map.image, 24 * col, 48 * row, 24, 48, coords.x, coords.y - 24, 24, 48);
                     }
                 }
 
@@ -1265,7 +1302,7 @@
         }) */
     ]; 
 
-    alert('Escape the hotel. Beware the entities!');
+    //alert('Escape the hotel. Beware the entities!');
     resize();
     game.loadMap(spriteList, 'doors');
     //setTimeout(game.doStuff, 500);
@@ -1283,7 +1320,7 @@
                 spd: 95,
                 cooldown: 8,
                 nature: 'attack',
-                solidTiles: [1,2,4,7],
+                solidTiles: [],
                 types: ['flying'],
                 color:'black'
             },
@@ -1301,14 +1338,14 @@
                 moveset: [
                     'moveAeropulse',
                     'moveIceBeam',
-                    'moveFlamethrower',
+                    'moveEarthPower',
                     'moveRoost'
                 ]
             }
         });
         game.you = game.spriteList[0];
         game.you.position = coord;
-        game.map.tiles[17][23] = 9;
+        game.map.tiles[17][23] = 4;
         setTimeout(()=>{game.drawEverything(game.you.position);}, 500);
     }
     //secretTest();

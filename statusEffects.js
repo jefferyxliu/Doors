@@ -7,6 +7,7 @@ const statusList = {
         category: 'atkStatModifier',
         atkStatModifier: 2/3
     },
+
     defUp: {
         category: 'defStatModifier',
         defStatModifier: 3/2
@@ -15,6 +16,25 @@ const statusList = {
         category: 'defStatModifier',
         defStatModifier: 2/3
     },
+
+    spaUp: {
+        category: 'spaStatModifier',
+        spaStatModifier: 3/2
+    },
+    spaDown: {
+        category: 'spaStatModifier',
+        spaStatModifier: 2/3
+    },
+    
+    spdUp: {
+        category: 'spdStatModifier',
+        spdStatModifier: 3/2
+    },
+    spdDown: {
+        category: 'spdStatModifier',
+        spdStatModifier: 2/3
+    },
+
     speUp: {
         category: 'cooldownStatModifier',
         cooldownStatModifier: 1/2
