@@ -32,6 +32,7 @@ const itemList = {
         },
         description: 'Boosts the user\'s attack for 10 turns.'
     },
+
     key1: {
         name:'Key 1',
         spriteIndex: 2,
@@ -48,6 +49,7 @@ const itemList = {
         cooldownStatModifier: 12/10,
         description: 'Opens a certain door.'
     },
+
     key2: {
         name:'Key 2',
         spriteIndex: 2,
@@ -63,6 +65,7 @@ const itemList = {
         cooldownStatModifier: 12/10,
         description: 'Opens a certain door.'
     },
+
     key3: {
         name:'Key 3',
         spriteIndex: 2,
@@ -78,6 +81,7 @@ const itemList = {
         cooldownStatModifier: 12/10,
         description: 'Opens a certain door.'
     },
+
     key4: {
         name:'Key 4',
         spriteIndex: 2,
@@ -93,6 +97,7 @@ const itemList = {
         cooldownStatModifier: 12/10,
         description: 'Opens a certain door.'
     },
+
     key5: {
         name:'Key 5',
         spriteIndex: 2,
@@ -108,6 +113,7 @@ const itemList = {
         cooldownStatModifier: 12/10,
         description: 'Opens a certain door.'
     },
+
     key6: {
         name:'Key 6',
         spriteIndex: 2,
@@ -123,6 +129,111 @@ const itemList = {
         cooldownStatModifier: 12/10,
         description: 'Opens a certain door.'
     },
+
+
+
+
+
+
+
+
+    esirykTowerKey1: {
+        name:'Key 1',
+        spriteIndex: 2,
+        onUse: function(target) {
+            if (game.map.name == 'esirykTower1F' && dist1(target.position, {x:26, y:26}) < 6) {
+                game.map.tiles[26][26] = 1;
+                console.log(`A door opened.`);
+                target.item = 'none';
+            } else {
+                alert('Hint: Use the key when the door is on screen.');
+                target.dropItem();
+            }
+        },
+        cooldownStatModifier: 12/10,
+        description: 'Opens a certain door.'
+    },
+
+    esirykTowerKey2: {
+        name:'Key 2',
+        spriteIndex: 2,
+        onUse: function(target) {
+            if (game.map.name == 'esirykTower2F' && dist1(target.position, {x:18, y:26}) < 6) {
+                game.map.tiles[26][18] = 1;
+                console.log(`A door opened.`);
+                target.item = 'none';
+            } else {
+                alert('Hint: Use the key when the door is on screen.');
+                target.dropItem();
+            }
+        },
+        cooldownStatModifier: 12/10,
+        description: 'Opens a certain door.'
+    },
+
+    esirykTowerKey3: {
+        name:'Key 3',
+        spriteIndex: 2,
+        onUse: function(target) {
+            if (game.map.name == 'esirykTower3F' && dist1(target.position, {x:18, y:18}) < 6) {
+                game.map.tiles[18][18] = 1;
+                console.log(`A door opened.`);
+                target.item = 'none';
+            } else {
+                alert('Hint: Use the key when the door is on screen.');
+                target.dropItem();
+            }
+        },
+        cooldownStatModifier: 12/10,
+        description: 'Opens a certain door.'
+    },
+
+    esirykTowerKey4: {
+        name:'Key 4',
+        spriteIndex: 2,
+        onUse: function(target) {
+            if (game.map.name == 'esirykTower4F' && dist1(target.position, {x:26, y:18}) < 6) {
+                game.map.tiles[18][26] = 1;
+                console.log(`A door opened.`);
+                target.item = 'none';
+            } else {
+                alert('Hint: Use the key when the door is on screen.');
+                target.dropItem();
+            }
+        },
+        cooldownStatModifier: 12/10,
+        description: 'Opens a certain door.'
+    },
+
+    esirykTowerKey5: {
+        name:'Key 5',
+        spriteIndex: 2,
+        onUse: function(target) {
+            if (game.map.name == 'esirykTower5F' && dist1(target.position, {x:22, y:24}) < 6) {
+                game.map.tiles[24][22] = 1;
+                console.log(`A door opened.`);
+                target.item = 'none';
+            } else {
+                alert('Hint: Use the key when the door is on screen.');
+                target.dropItem();
+            }
+        },
+        cooldownStatModifier: 12/10,
+        description: 'Opens a certain door.'
+    },
+
+    floatStone: {
+        name:'Float Stone',
+        spriteIndex: 0,
+        onUse: function(target) {
+            target.dropItem();
+        },
+        onModifySolidTiles(st) {
+            return st.filter((t) => {return t != 12 && t != 13;})
+        },
+        description: 'Allows users to float on air.'
+    },
+
     leftovers: {
         name: 'Leftovers',
         onUse: function(target) {

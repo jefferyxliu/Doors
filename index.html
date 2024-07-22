@@ -96,6 +96,10 @@
 <script src = "moves.js"></script>
 <script src = "statusEffects.js"></script>
 <script>
+    function csvToArray(s) {
+        return `[[${s.replaceAll('\n', '],[')}]]`;
+    }
+
     let idGenerator = 0;
     function generateNewID() {
         idGenerator++;
@@ -400,7 +404,8 @@
 
         move(code) {
             if (code == this.direction) {
-                const target = this.getTarget()
+                const target = this.getTarget();
+                //console.log(target);
                 if (!target) {
                     this.position = addCoords(this.position, game.controls[code]);
                     this.applyCooldown();
@@ -435,7 +440,16 @@
 
         getTarget() {
             const fr = addCoords(this.position, game.controls[this.direction]);
-            if (game.map.isWall(fr, this.solidTiles)) {
+            let st = this.solidTiles;
+            
+            if (this.item != 'none') {
+                const item = this.getItem();
+                if (Object.hasOwn(item, `onModifySolidTiles`)) {
+                    st = item.onModifySolidTiles(st);
+                };
+            }
+            //console.log(st);
+            if (game.map.isWall(fr, st)) {
                 return 'wall';
             } else {
                 const s = game.spriteList.filter((sprite) => 
@@ -712,6 +726,7 @@
 
     class Map {
         constructor(options) {
+            this.name = options.name;
             this.tiles = options.tiles;
             this.sprite = options.mapSprite;
             this.warpZones = options.warpZones;
