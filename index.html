@@ -1071,15 +1071,14 @@
         new Entity({
             nickname: 'You',
             stat: {
-                maxHP: 10,
+                maxHP: 15,
                 atk: 10,
                 def: 10,
                 spa: 10,
                 spd: 10,
                 cooldown: 12,
                 nature: 'attack',
-                solidTiles: [1,2,4,6,7],
-                types: ['ice'],
+                types: ['normal'],
                 color:'black'
             },
             position: {
@@ -1112,7 +1111,6 @@
                 spd: 10,
                 cooldown: 12,
                 nature: 'follow team',
-                solidTiles: [1,2,4,6,7],
                 types: ['normal'],
                 color:'black'
             },
@@ -1135,171 +1133,6 @@
                 ]
             }
         })
-
-/*         new Entity('Figure',{
-            stat: {
-                maxHP: 50,
-                atk: 25,
-                def: 20,
-                spa: 10,
-                spd: 20,
-                cooldown: 16,
-                nature: 'attack',
-                solidTiles: [1,2,3,4,7],
-                types: ['fighting'],
-                color:'brown'
-            },
-            position: {
-                x: 44,
-                y: 29
-            },
-            options: {
-                direction: 'ArrowRight',
-                sprite: 'figure',
-                item: 'none',
-                size: 24,
-                team: 1,
-                control: false,
-                moveset: [
-                    'moveTackle',
-                    'moveKarateChop',
-                    'moveSwordsDance',
-                    'moveQuickAttack'
-                ]
-            }
-            }),
-
-        new Entity('Rush 2',{
-            stat: {
-                maxHP: 10,
-                atk: 4,
-                def: 15,
-                spa: 4,
-                spd: 15,
-                cooldown: 8,
-                nature: 'back and forth',
-                solidTiles: [1,2,3,4,7],
-                types: ['dark'],
-                color:'brown'
-            },
-            position: {
-                x: 25,
-                y: 11
-            },
-            options: {
-                direction: 'ArrowRight',
-                sprite: 'rush',
-                item: 'key6',
-                size: 24,
-                team: 1,
-                control: false,
-                moveset: [
-                    'moveTackle',
-                    'moveKarateChop',
-                    'moveSwordsDance',
-                    'moveQuickAttack'
-                ]
-            }
-        }),
-
-        new Entity('Rush 1',{
-            stat: {
-                maxHP: 10,
-                atk: 4,
-                def: 15,
-                spa: 4,
-                spd: 15,
-                cooldown: 8,
-                nature: 'back and forth',
-                solidTiles: [1,2,3,4,7],
-                types: ['dark'],
-                color:'brown'
-            }, 
-            position: {
-                x: 29,
-                y: 29
-            },
-            options: {
-                direction: 'ArrowUp',
-                sprite: 'rush',
-                item: 'none',
-                size: 24,
-                team: 1,
-                control: false,
-                moveset: [
-                    'moveTackle',
-                    'moveKarateChop',
-                    'moveSwordsDance',
-                    'moveQuickAttack'
-                ]
-            }
-            }),
-
-        new Entity('Seek',{
-            stat: {
-                maxHP: 20,
-                atk: 5,
-                def: 15,
-                spa: 5,
-                spd: 15,
-                cooldown: 11,
-                nature: 'attack',
-                solidTiles: [1,2,3,4,7],
-                types: ['poison'],
-                color:'brown'
-            },
-            position: {
-                x: 48,
-                y: 1
-            },
-            options: {
-                direction: 'ArrowRight',
-                sprite: 'seek',
-                item: 'none',
-                size: 24,
-                team: 1,
-                control: false,
-                moveset: [
-                    'moveTackle',
-                    'moveKarateChop',
-                    'moveSwordsDance',
-                    'moveQuickAttack'
-                ]
-            }
-        }),
-
-        new Entity('Ambush',{
-            stat: {
-                maxHP: 15,
-                atk: 3,
-                def: 15,
-                spa: 3,
-                spd: 15,
-                cooldown: 4,
-                nature: 'back and forth',
-                solidTiles: [1,2,3,4,7],
-                types: ['ghost'],
-                color:'brown',
-            }, 
-            position: {
-                x: 39,
-                y: 13
-            },
-            options: {
-                direction: 'ArrowRight',
-                sprite: 'ambush',
-                size: 24,
-                item: 'none',
-                team: 1,
-                control: false,
-                moveset: [
-                    'moveTackle',
-                    'moveKarateChop',
-                    'moveSwordsDance',
-                    'moveQuickAttack'
-                ]
-            }
-        }) */
     ]; 
 
     //alert('Escape the hotel. Beware the entities!');

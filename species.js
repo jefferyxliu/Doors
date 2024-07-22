@@ -8,7 +8,6 @@ const speciesList = {
             spd: 10,
             cooldown: 12,
             nature: 'follow team',
-            solidTiles: [1,2,4,6,7],
             types: ['normal'],
             color: 'black'
         }
@@ -23,7 +22,6 @@ const speciesList = {
             spd: 10,
             cooldown: 12,
             nature: 'follow team',
-            solidTiles: [1,2,4,6,7],
             types: ['normal'],
             color:'black'
         }
@@ -38,7 +36,6 @@ const speciesList = {
             spd: 20,
             cooldown: 16,
             nature: 'attack',
-            solidTiles: [1,2,3,4,7],
             types: ['fighting'],
             color:'brown'
         }
@@ -53,7 +50,6 @@ const speciesList = {
             spd: 15,
             cooldown: 8,
             nature: 'back and forth',
-            solidTiles: [1,2,3,4,7],
             types: ['dark'],
             color:'brown'
         }
@@ -68,7 +64,6 @@ const speciesList = {
             spd: 15,
             cooldown: 11,
             nature: 'attack',
-            solidTiles: [1,2,3,4,7],
             types: ['poison'],
             color:'brown'
         }
@@ -83,7 +78,6 @@ const speciesList = {
             spd: 15,
             cooldown: 4,
             nature: 'back and forth',
-            solidTiles: [1,2,3,4,7],
             types: ['ghost'],
             color:'brown',
         },
