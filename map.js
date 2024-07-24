@@ -56,9 +56,7 @@ const mapData = {
                 },
                 options: {
                     direction: 'ArrowRight',
-                    sprite: 'figure',
                     item: 'none',
-                    size: 24,
                     team: 1,
                     control: false,
                     moveset: [
@@ -75,9 +73,7 @@ const mapData = {
                 },
                 options: {
                     direction: 'ArrowRight',
-                    sprite: 'rush',
                     item: 'key6',
-                    size: 24,
                     team: 1,
                     control: false,
                     moveset: [
@@ -94,9 +90,7 @@ const mapData = {
                 },
                 options: {
                     direction: 'ArrowUp',
-                    sprite: 'rush',
                     item: 'none',
-                    size: 24,
                     team: 1,
                     control: false,
                     moveset: [
@@ -113,9 +107,7 @@ const mapData = {
                 },
                 options: {
                     direction: 'ArrowRight',
-                    sprite: 'seek',
                     item: 'none',
-                    size: 24,
                     team: 1,
                     control: false,
                     moveset: [
@@ -132,8 +124,6 @@ const mapData = {
                 },
                 options: {
                     direction: 'ArrowRight',
-                    sprite: 'ambush',
-                    size: 24,
                     item: 'none',
                     team: 1,
                     control: false,
@@ -225,9 +215,7 @@ const mapData = {
                 },
                 options: {
                     direction: 'ArrowRight',
-                    sprite: 'human2',
                     item: 'leftovers',
-                    size: 24,
                     team: 1,
                     control: false,
                     moveset: [
@@ -253,7 +241,11 @@ const mapData = {
         ],
         mapSprite:'pokemon/esirykTower',
         itemSprite:'items',
-        entitiesOnSpawn: []
+        entitiesOnSpawn: [],
+        randomEncounters: {
+            spawnLocations: [{x:6, y:6},{x:6, y:38},{x:38, y:6},{x:38, y:38},{x:13, y:22},{x:22, y:13},{x:22, y:31},{x:31, y:22}], 
+            species: ['sanfi', 'sanfi', 'sanfi', 'sanfi','sanfi']
+        }
     },
 
     esirykTower2F: {
@@ -283,7 +275,11 @@ const mapData = {
         ],
         mapSprite:'pokemon/esirykTower',
         itemSprite:'items',
-        entitiesOnSpawn: []
+        entitiesOnSpawn: [],
+        randomEncounters: {
+            spawnLocations: [{x:6, y:6},{x:6, y:38},{x:38, y:6},{x:38, y:38},{x:13, y:22},{x:22, y:13},{x:22, y:31},{x:31, y:22}], 
+            species: ['sanfi', 'sanfi', 'sanfi', 'sanfi','avisera']
+        }
     },
 
     esirykTower3F: {
@@ -311,7 +307,11 @@ const mapData = {
         ],
         mapSprite:'pokemon/esirykTower',
         itemSprite:'items',
-        entitiesOnSpawn: []
+        entitiesOnSpawn: [],
+        randomEncounters: {
+            spawnLocations: [{x:6, y:6},{x:6, y:38},{x:38, y:6},{x:38, y:38},{x:13, y:22},{x:22, y:13},{x:22, y:31},{x:31, y:22}], 
+            species: ['sanfi', 'sanfi', 'sanfi', 'sanfi','avisera']
+        }
     },
 
     esirykTower4F: {
@@ -337,7 +337,11 @@ const mapData = {
         ],
         mapSprite:'pokemon/esirykTower',
         itemSprite:'items',
-        entitiesOnSpawn: []
+        entitiesOnSpawn: [],
+        randomEncounters: {
+            spawnLocations: [{x:6, y:6},{x:6, y:38},{x:38, y:6},{x:38, y:38},{x:13, y:22},{x:22, y:13},{x:22, y:31},{x:31, y:22}], 
+            species: ['sanfi', 'sanfi', 'avisera', 'avisera','avisera']
+        }
     },
 
     esirykTower5F: {
@@ -361,7 +365,11 @@ const mapData = {
         ],
         mapSprite:'pokemon/esirykTower',
         itemSprite:'items',
-        entitiesOnSpawn: []
+        entitiesOnSpawn: [],
+        randomEncounters: {
+            spawnLocations: [{x:6, y:6},{x:6, y:38},{x:38, y:6},{x:38, y:38},{x:13, y:22},{x:22, y:13},{x:22, y:31},{x:31, y:22}], 
+            species: ['sanfi', 'sanfi', 'avisera', 'avisera','sanctuavia']
+        }
     },
 
     esirykTower6F: {

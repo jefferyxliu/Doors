@@ -240,8 +240,8 @@
 
             this.solidTiles = this.getSolidTiles();
 
-            this.sprite = data.options.sprite;
-            this.size = data.options.size;
+            this.sprite = data.stat.sprite;
+            this.size = data.stat.size;
 
             this.loaded = false;
             if (this.sprite) {
@@ -403,28 +403,33 @@
         }
 
         move(code) {
-            if (code == this.direction) {
-                const target = this.getTarget();
-                //console.log(target);
-                if (!target) {
-                    this.position = addCoords(this.position, game.controls[code]);
-                    this.applyCooldown();
-                    console.log(this.name, 'move');
-                } else {
-                    if (target != 'wall') {
-                        if (target.team == this.team && this.control) {
-                            this.switch(target);
-                            this.applyCooldown();
-                        } else {
-                            this.wait();
-                        }
-                    } else {
-                        this.wait();
-                    }
-                }
-            } else {
+            if (code != this.direction) {
                 this.direction = code;
+                return false;
             }
+
+            const target = this.getTarget();
+            //console.log(target);
+            if (!target) {
+                this.position = addCoords(this.position, game.controls[code]);
+                this.applyCooldown();
+                console.log(this.name, 'move');
+                return true;
+            }
+            
+            if (target == 'wall') {
+                this.wait();
+                return false;
+            }
+
+            if (target.team != this.team || !this.control) {
+                this.wait();
+                return false;
+            }
+
+            this.switch(target);
+            this.applyCooldown();
+            return false;
         }
 
         switch(target) {
@@ -434,8 +439,9 @@
         }
 
         useMove(n = 0) {
-            onUseMove(this, moveList[this.moveset[n]], {});
-            game.moveUsed = {user: this, move: moveList[this.moveset[n]]};
+            if (onUseMove(this, moveList[this.moveset[n]], {})) {
+                game.moveUsed = {user: this, move: moveList[this.moveset[n]]};
+            }
         }
 
         getTarget() {
@@ -451,16 +457,15 @@
             //console.log(st);
             if (game.map.isWall(fr, st)) {
                 return 'wall';
-            } else {
-                const s = game.spriteList.filter((sprite) => 
-                    coordsEq(sprite.position, fr) && sprite.isAlive()
-                );
-                if (s.length > 0) {
-                    return s[0];
-                } else {
-                    return false;
-                }
             }
+            
+            const s = game.spriteList.filter((sprite) => 
+                coordsEq(sprite.position, fr) && sprite.isAlive()
+            );
+            if (s.length == 0) {
+                return false;
+            }
+            return s[0];
         }
 
         getTargetSprites() {
@@ -563,7 +568,7 @@
                 //s += ` (Next Turn: ${this.actionCounter})`;        
             }
             if (this.item != 'none') {
-                s += ` - held item: ${this.getItem().name}`
+                s += ` : ${this.getItem().name}`
             }
             this.nameLabel.innerHTML = s;
             const percent = Math.floor(100 * this.HP / this.stat.maxHP);
@@ -614,112 +619,118 @@
             return ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].filter((direction) => distances[direction] == m);
         }
 
+        returnTowardStart() {
+            const s = this.smartGetDistance(this.startPosition);
+            if (s.length == 0) {
+                this.wait();
+                return;
+            }
+            this.direction = randomElement(s);
+            this.move(this.direction);
+        }
+
         AIMove() {
-            if (this.isAlive()) {
-                if (this.stat.nature == 'attack') {
-                    let targets = game.spriteList.filter((sprite)=>{return sprite.team != this.team && sprite.isAlive()});
-                    if (targets.length > 0) {
-                        const target = targets.toSorted((sprite1, sprite2)=> dist(this.position, sprite1.position) - dist(this.position, sprite2.position))[0];
-                        this.turnToward(target.position);
-                        const d = dist(this.position, target.position);
-                        const d1 = dist1(this.position, target.position);
-                        if (d == 1) {
-                            this.useMove();
-                        } else {
-                            if (d > 1 && d1 < 9) {
-                                const s = this.smartGetDistance(addCoords(target.position, game.controls[game.opposite[target.direction]]));
-                                //console.log(s);
-                                if (s.length > 0) {
-                                    this.direction = randomElement(s);
-                                    this.move(this.direction);
-                                } else {
-                                    const s = this.smartGetDistance(this.startPosition);
-                                    if (s.length > 0) {
-                                        this.direction = randomElement(s);
-                                        this.move(this.direction);
-                                    } else {
-                                        this.wait();
-                                    }
-                                }
-                            } else {
-                                const s = this.smartGetDistance(this.startPosition);
-                                if (s.length > 0) {
-                                    this.direction = randomElement(s);
-                                    this.move(this.direction);
-                                } else {
-                                    this.wait();
-                                }
-                            }
-                        }
-                    } else {
-                        const s = this.smartGetDistance(this.startPosition);
-                            if (s.length > 0) {
-                                this.direction = randomElement(s);
-                                this.move(this.direction);
-                            } else {
-                            this.wait();
-                        }
-                    }
+            if (!this.isAlive()) {
+                return;
+            }
+
+            if (this.stat.nature == 'attack') {
+                let targets = game.spriteList.filter((sprite)=>{return sprite.team != this.team && sprite.isAlive()});
+                if (targets.length == 0) {
+                    this.returnTowardStart();
+                    return;
                 }
-                if (this.stat.nature == 'wander') {
-                    let targets = game.spriteList.filter((sprite)=>{return sprite.team != this.team && dist1(this.position, sprite.position) < 10 && !game.map.isHidden(sprite.position) && sprite.isAlive()});
-                    if (targets.length > 0) {
-                        const target = targets.toSorted((sprite1, sprite2)=> dist(this.position, sprite1.position) - dist(this.position, sprite2.position))[0];
-                        this.turnToward(target.position);
-                        this.stat.nature = 'attack';
-                        this.wait();
-                    } else {
-                        this.direction = randomElement(['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'])
-                        if (this.getTarget()) {
-                            this.direction = game.opposite[this.direction];
-                        }
-                        this.move(this.direction);
-                    }
+
+                const target = targets.toSorted((sprite1, sprite2)=> dist(this.position, sprite1.position) - dist(this.position, sprite2.position))[0];
+                this.turnToward(target.position);
+                const d = dist(this.position, target.position);
+                const d1 = dist1(this.position, target.position);
+                if (d == 1) {
+                    this.useMove();
+                    return;
                 }
-                if (this.stat.nature == 'back and forth') {
-                    let targets = game.spriteList.filter((sprite)=>{return sprite.team != this.team && dist(this.position, sprite.position) == 1 && !game.map.isHidden(sprite.position) && sprite.isAlive()});
-                    if (targets.length > 0) {
-                        this.turnToward(targets[0].position);
-                        this.stat.nature = 'attack';
-                        this.useMove();
-                    } else {
-                        if (this.getTarget()) {
-                            this.direction = game.opposite[this.direction];
-                        }
-                        this.move(this.direction);
-                    }
+
+                if (d == 0 || d1 >= 9) {
+                    this.returnTowardStart();
+                    return;
                 }
-                if (this.stat.nature == 'follow team') {
-                    let targets = game.spriteList.filter((sprite) => {return sprite.team == this.team && sprite.isAlive() && sprite.name != this.name && sprite.control == true});
+                
+                const s = this.smartGetDistance(addCoords(target.position, game.controls[game.opposite[target.direction]]));
+                //console.log(s);
+                if (s.length == 0) {
+                    this.returnTowardStart();
+                    return;
+                }
+                
+                this.direction = randomElement(s);
+                this.move(this.direction);
+            }
+
+            if (this.stat.nature == 'wander') {
+                let targets = game.spriteList.filter((sprite)=>{return sprite.team != this.team && dist1(this.position, sprite.position) < 10 && !game.map.isHidden(sprite.position) && sprite.isAlive()});
+                
+                if (targets.length == 0) {
+                    this.direction = randomElement(['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'])
+                    if (this.getTarget()) {
+                        this.direction = game.opposite[this.direction];
+                    }
+                    this.move(this.direction);
+                    return;
+                }
+                const target = targets.toSorted((sprite1, sprite2)=> dist(this.position, sprite1.position) - dist(this.position, sprite2.position))[0];
+                this.turnToward(target.position);
+                this.stat.nature = 'attack';
+                this.wait();
+            }
+
+            if (this.stat.nature == 'back and forth') {
+                let targets = game.spriteList.filter((sprite)=>{return sprite.team != this.team && dist(this.position, sprite.position) == 1 && !game.map.isHidden(sprite.position) && sprite.isAlive()});
+                if (targets.length == 0) {
+                    if (this.getTarget()) {
+                        this.direction = game.opposite[this.direction];
+                    }
+                    this.move(this.direction);
+                    return;
+                }
+                this.turnToward(targets[0].position);
+                this.stat.nature = 'attack';
+                this.useMove();
+            }
+
+            if (this.stat.nature == 'follow team') {
+                let targets = game.spriteList.filter((sprite) => {return sprite.team == this.team && sprite.isAlive() && sprite.name != this.name && sprite.control == true});
                     
-                    if (targets.length > 0) {
-                        const target = targets.toSorted((sprite1, sprite2)=> dist(this.position, sprite1.position) - dist(this.position, sprite2.position))[0];
-                        this.turnToward(target.position);
-                        const d = dist(this.position, target.position);
-                        const d1 = dist1(this.position, target.position);
-                        if (d == 1) {
-                            this.wait();
-                        } else {
-                            if (d > 1 && d1 < 10) {
-                                const s = this.smartGetDistance(addCoords(target.position, game.controls[game.opposite[target.direction]]));
-                                //console.log(s);
-                                if (s.length > 0) {
-                                    this.direction = randomElement(s);
-                                    this.move(this.direction);
-                                } else {
-                                    this.wait();
-                                }
-                            } else {
-                                this.wait();
-                            }
-                        }
-                    } else {
-                        this.wait();
-                    }
-                }
-                if (this.stat.nature == 'wait') {
+                if (targets.length == 0) {
                     this.wait();
+                    return;
                 }
+                const target = targets.toSorted((sprite1, sprite2)=> dist(this.position, sprite1.position) - dist(this.position, sprite2.position))[0];
+                this.turnToward(target.position);
+                const d = dist(this.position, target.position);
+                const d1 = dist1(this.position, target.position);
+
+                if (d == 1) {
+                    this.wait();
+                    return;
+                }
+                    
+                if (d == 0 || d1 >= 10) {
+                    this.wait();
+                    return;
+                }
+                
+                const s = this.smartGetDistance(addCoords(target.position, game.controls[game.opposite[target.direction]]));
+                    //console.log(s);
+                if (s.length == 0) {
+                    this.wait();
+                    return;
+                }
+                this.direction = randomElement(s);
+                this.move(this.direction);                
+            }
+
+            if (this.stat.nature == 'wait') {
+                this.wait();
             }
         }
     }
@@ -730,6 +741,9 @@
             this.tiles = options.tiles;
             this.sprite = options.mapSprite;
             this.warpZones = options.warpZones;
+            if (Object.hasOwn(options, 'randomEncounters')) {
+                this.randomEncounters = options.randomEncounters;
+            }
             this.tileHeight = 48;
             this.tileWidth = 24;
             this.tileSize = 24;
@@ -917,6 +931,31 @@
             )
         },
 
+        spawnRandomEncounter: function() {
+            if (this.spriteList.length > 10) {
+                return false;
+            }
+            if (Object.hasOwn(this.map, 'randomEncounters')) {
+                const p = randomElement(this.map.randomEncounters.spawnLocations.filter((p)=>{return dist1(this.you.position, p) > 5}));
+                const s = randomElement(this.map.randomEncounters.species);
+
+                this.spawnEntity({
+                    nickname: s[0].toUpperCase() + s.slice(1),
+                    speciesName: s,
+                    position: p,
+                    options: {
+                        direction: 'ArrowRight',
+                        item: 'none',
+                        team: 1,
+                        control: false,
+                        moveset: [
+                            'moveTackle',
+                        ]
+                    }
+                })
+            }
+        },
+
         loadMap: function(s, m, spawnLocation = false) {
             this.map = new Map(deepCopy(mapData[m]));
             this.spriteList = s;
@@ -944,8 +983,6 @@
                 }
             }
 
-
-
             setTimeout(()=>{
                 game.doStuff();
             }, 500);
@@ -953,7 +990,7 @@
 
         doStuff: function() {
             if (this.spriteList.filter((sprite) => {return sprite.control}).length == 0) {
-                return true;
+                return false;
             }
             const sprite = this.spriteList[this.iter];
             
@@ -963,68 +1000,77 @@
                 this.iter = this.iter % this.spriteList.length;
                 this.drawEverything(this.you.position);
                 setTimeout(()=>{game.drawEverything(game.you.position);}, 0);
-            } else {
-                sprite.actionCounter--;
-                if (sprite.actionCounter <= 0 && sprite.isAlive()) {
-                    if (sprite.control) {
-                        this.you = sprite;
-                        if (this.actionQueue.length == 0) {
-                            sprite.actionCounter++;
-                            this.drawEverything(this.you.position);
-                            return true;
-                        } else {
-                            const code = this.actionQueue[0];
-                            if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(code)) {
-                                this.you.move(code);
-                            }
-                            if (code == 'Space') {
-                                this.you.useMove();
-                                //this.you.attack(this.you.getTarget(), 5);
-                            }
-                            if (['Digit1', 'Digit2', 'Digit3', 'Digit4'].includes(code)) {
-                                const n = {'Digit1':0, 'Digit2':1, 'Digit3':2, 'Digit4':3}
-                                this.you.useMove(n[code]);
-                            }
-                            if (code == 'KeyH') {
-                                this.you.heal(1);
-                            }
-                            if (code == 'KeyC') {
-                                this.you.useItem();
-                            }
-                            if (code == 'KeyX') {
-                                this.you.pickUpItem();
-                            }
-                            if (code == 'KeyZ') {
-                                this.you.dropItem();
-                            }
-                            if (code == 'KeyV') {
-                                this.you.wait();
-                            }
-                            this.actionQueue.splice(0,1);
-
-                            if (sprite.actionCounter > 0) {
-                                sprite.endTurn();
-                                this.iter = (this.iter + 1) % this.spriteList.length;
-                            } else {
-                                sprite.actionCounter++;
-                            }
-                            this.drawEverything(this.you.position);
-                            setTimeout(()=>{game.doStuff();}, 500);
-                        }
-                    } else {
-                        sprite.AIMove();
-                        this.drawEverything(this.you.position);
-                        if (sprite.actionCounter > 0) {
-                            sprite.endTurn();
-                            this.iter = (this.iter + 1) % this.spriteList.length;
-                        }
-                        setTimeout(()=>{game.doStuff();}, dist1(sprite.position, this.you.position) < 6 ? 50 : 0);
-                    }
-                } else {
-                    this.iter = (this.iter + 1) % this.spriteList.length;
-                    setTimeout(()=>{game.doStuff();}, 0);
-                }
+                return false;
             }
+
+            sprite.actionCounter--;
+
+            if (sprite.actionCounter > 0) {
+                this.iter = (this.iter + 1) % this.spriteList.length;
+                setTimeout(()=>{game.doStuff();}, 0);
+                return false;
+            }
+
+            if (!sprite.control) {
+                sprite.AIMove();
+                this.drawEverything(this.you.position);
+                if (sprite.actionCounter > 0) {
+                    sprite.endTurn();
+                    this.iter = (this.iter + 1) % this.spriteList.length;
+                }
+                setTimeout(()=>{game.doStuff();}, dist1(sprite.position, this.you.position) < 6 ? 50 : 0);
+                return true;
+            }
+
+            this.you = sprite;
+            if (this.actionQueue.length == 0) {
+                sprite.actionCounter++;
+                this.drawEverything(this.you.position);
+                return false;
+            }
+
+            const code = this.actionQueue[0];
+            if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(code)) {
+                this.you.move(code);
+            }
+            if (code == 'Space') {
+                this.you.useMove();
+                //this.you.attack(this.you.getTarget(), 5);
+            }
+            if (['Digit1', 'Digit2', 'Digit3', 'Digit4'].includes(code)) {
+                const n = {'Digit1':0, 'Digit2':1, 'Digit3':2, 'Digit4':3}
+                this.you.useMove(n[code]);
+            }
+            if (code == 'KeyH') {
+                this.you.heal(1);
+            }
+            if (code == 'KeyC') {
+                this.you.useItem();
+            }
+            if (code == 'KeyX') {
+                this.you.pickUpItem();
+            }
+            if (code == 'KeyZ') {
+                this.you.dropItem();
+            }
+            if (code == 'KeyV') {
+                this.you.wait();
+            }
+            this.actionQueue.splice(0,1);
+
+            if (sprite.actionCounter == 0) {
+                sprite.actionCounter++;
+                this.drawEverything(this.you.position);
+                setTimeout(()=>{game.doStuff();}, 500);
+                return false;
+            }
+            
+            sprite.endTurn();
+            this.iter = (this.iter + 1) % this.spriteList.length;
+            if (Math.floor(Math.random() * 5) == 0) {this.spawnRandomEncounter();}
+            this.drawEverything(this.you.position);
+            setTimeout(()=>{game.doStuff();}, 500);
+            return true;          
         },
 
         drawEverything: function(camera) {
@@ -1086,15 +1132,17 @@
         new Entity({
             nickname: 'You',
             stat: {
-                maxHP: 15,
-                atk: 10,
-                def: 10,
-                spa: 10,
-                spd: 10,
+                maxHP: 80,
+                atk: 80,
+                def: 80,
+                spa: 80,
+                spd: 80,
                 cooldown: 12,
                 nature: 'attack',
                 types: ['normal'],
-                color:'black'
+                color:'black',
+                sprite: 'human',
+                size: 24
             },
             position: {
                 x: 25, 
@@ -1102,16 +1150,14 @@
             },
             options: {
                 direction: 'ArrowRight',
-                sprite: 'human',
-                item: 'none',
-                size: 24,
+                item: 'leftovers',
                 team: 0,
                 control: true,
                 moveset: [
                     'moveTackle',
                     'moveIceBeam',
                     'moveHyperBeam',
-                    'moveGigaImpact'
+                    'moveRecover'
                 ]
             }
         }),
@@ -1127,7 +1173,9 @@
                 cooldown: 12,
                 nature: 'follow team',
                 types: ['normal'],
-                color:'black'
+                color:'black',
+                sprite: 'human2',
+                size: 24
             },
             position: {
                 x: 53,
@@ -1135,9 +1183,7 @@
             },
             options: {
                 direction: 'ArrowRight',
-                sprite: 'human2',
                 item: 'none',
-                size: 24,
                 team: 0,
                 control: false,
                 moveset: [
@@ -1168,9 +1214,10 @@
                 spd: 95,
                 cooldown: 8,
                 nature: 'attack',
-                solidTiles: [],
                 types: ['flying'],
-                color:'black'
+                color:'black',
+                sprite: 'pokemon/sanctuavia',
+                size: 32
             },
             position: {
                 x: 25, 
@@ -1178,9 +1225,7 @@
             },
             options: {
                 direction: 'ArrowRight',
-                sprite: 'pokemon/sanctuavia',
                 item: 'none',
-                size: 32,
                 team: 0,
                 control: true,
                 moveset: [

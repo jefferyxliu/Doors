@@ -260,45 +260,32 @@ const moveList = {
     }
 }
 
-function onUseMove(user, move, options) {
+function onUseMove(user, move, options) { //returns true if move user succesfully executes
     console.log(`${user.name} used ${move.name}!`)
-    const targets = getTargets(user, move.pattern);
-    if (!game.map.isHidden(user.position) && user.isAlive()) {
-        const userFailed = userFailCheck(user, targets, move) 
-        if (!userFailed) {
-            //moveAnimation.draw(user, move, options)
-            let spreadModifier = false;
-            if (targets.length > 1) {
-                spreadModifier = true;
-            }
-            let hitAny = false;
-            for (const target of targets) {
-                if (!game.map.isHidden(target.position)) {
-                    const targetFailed = targetFailCheck(user, target, move);
-                    
-                    if (!targetFailed) {
-                        hitAny = true;
-                        if (move.category != 'status') {
-                            target.damage(damageFormula(user, target, move, {spread: spreadModifier}));
-                        }
-                        if (Object.hasOwn(move, 'targetSecondaryEffect')) {
-                            move.targetSecondaryEffect(target);
-                        }
-                    } else {
-                        console.log(targetFailed);
-                    }
-                }
-            }
-            if (hitAny) {
-                if (Object.hasOwn(move, 'userSecondaryEffect')) {
-                    move.userSecondaryEffect(user);
-                }
-            }
-        } else {
-            console.log(userFailed);
-        }
-    }
     user.applyCooldown();
+
+    if (game.map.isHidden(user.position) || !user.isAlive()) {
+        return false;
+    }
+
+    const targets = getTargets(user, move.pattern);
+    const userFailed = userFailCheck(user, targets, move) 
+    if (userFailed) {
+        console.log(userFailed);
+        return false;
+    }
+
+    const spreadModifier = !(targets.length == 0);
+    let hitAny = false;
+    for (const target of targets) {
+        if (executeMoveOnTarget(user, target, move, spreadModifier)) {
+            hitAny = true;
+        };
+    }
+    if (hitAny && Object.hasOwn(move, 'userSecondaryEffect')) {
+        move.userSecondaryEffect(user);   
+    }
+    return true;
 }
 
 function getTargets(user, pattern) {
@@ -326,8 +313,6 @@ function userFailCheck(user, targets, move) {
 
 function targetFailCheck(user, target, move) {
 
-
-
     //52. type immunity
     if (move.category != 'status') {
         if (typeChart.isImmune(move.type, target.types)) {
@@ -341,22 +326,44 @@ function targetFailCheck(user, target, move) {
     return false;
 }
 
+function executeMoveOnTarget(user, target, move, spreadModifier) {
+    if (game.map.isHidden(target.position)) {
+        return false;
+    }
+
+    const targetFailed = targetFailCheck(user, target, move);
+                
+    if (targetFailed) {
+        console.log(targetFailed);
+        return false;
+    }
+
+    if (move.category != 'status') {
+        target.damage(damageFormula(user, target, move, {spread: spreadModifier}));
+    }
+
+    if (Object.hasOwn(move, 'targetSecondaryEffect')) {
+        move.targetSecondaryEffect(target);
+    }
+    return true;
+}
+
 function damageFormula(user, target, move, options) {
-    const damageAdjust = 1/10;
+    const damageAdjust = 0.6;
     let s = '';
 
     let attackingStat, defendingStat;
     
     if (move.category == 'physical') {
-        attackingStat = user.stat.atk;
-        defendingStat = target.stat.def;
+        attackingStat = user.stat.atk + 20;
+        defendingStat = target.stat.def + 20;
 
         attackingStat = user.modifyStat('atk', attackingStat);
         defendingStat = target.modifyStat('def', defendingStat);
     }
     if (move.category == 'special') {
-        attackingStat = user.stat.spa;
-        defendingStat = target.stat.spd;
+        attackingStat = user.stat.spa + 20;
+        defendingStat = target.stat.spd + 20;
 
         attackingStat = user.modifyStat('spa', attackingStat);
         defendingStat = target.modifyStat('spd', defendingStat);
@@ -364,7 +371,7 @@ function damageFormula(user, target, move, options) {
 
     let basePower = move.basePower;
 
-    let damage = Math.floor(damageAdjust * basePower * attackingStat / defendingStat);
+    let damage = Math.floor(Math.floor(22 * damageAdjust * basePower * attackingStat / defendingStat) / 50) + 2;
     //spread modifier
     if (options.spread == true) {
         damage *= 0.75;
@@ -373,7 +380,7 @@ function damageFormula(user, target, move, options) {
     //critical hit modifier
     if (Math.floor(Math.random() * 24) == 0) {
         damage *= 1.5;
-        s += 'Critical hit!'
+        s += 'Critical hit!\n'
     }
 
     //random modifier
@@ -388,10 +395,10 @@ function damageFormula(user, target, move, options) {
     const typeModifier = typeChart.getEffectiveModifier(move.type, target.types);
     damage *= typeModifier;
     if (typeModifier > 1) {
-        s += 'It\'s super effective!'
+        s += 'It\'s super effective!\n'
     }
     if (typeModifier < 1) {
-        s += 'It\'s not very effective...'
+        s += 'It\'s not very effective...\n'
     }
 
     //status modifier (e.g. burn half physical damage)
