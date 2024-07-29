@@ -11,7 +11,8 @@ const speciesList = {
             types: ['normal'],
             color: 'black',
             sprite: 'human',
-            size: 24
+            size: 24,
+            defaultMoves: ['moveTackle']
         }
     },
 
@@ -27,7 +28,8 @@ const speciesList = {
             types: ['normal'],
             color:'black',
             sprite: 'human2',
-            size: 24
+            size: 24,
+            defaultMoves: ['moveTackle']
         }
     },
 
@@ -43,7 +45,8 @@ const speciesList = {
             types: ['fighting'],
             color:'brown',
             sprite: 'figure',
-            size: 24
+            size: 24,
+            defaultMoves: ['moveKarateChop']
         }
     },
 
@@ -59,7 +62,8 @@ const speciesList = {
             types: ['dark'],
             color:'brown',
             sprite: 'rush',
-            size: 24
+            size: 24,
+            defaultMoves: ['moveDarkPulse']
         }
     },
 
@@ -75,7 +79,8 @@ const speciesList = {
             types: ['poison'],
             color:'brown',
             sprite: 'seek',
-            size: 24
+            size: 24,
+            defaultMoves: ['moveSludgeBomb']
         }
     },
 
@@ -91,8 +96,60 @@ const speciesList = {
             types: ['ghost'],
             color:'brown',
             sprite: 'ambush',
-            size: 24
+            size: 24,
+            defaultMoves: ['moveDarkPulse']
         },
+    },
+
+    albaby: {
+        stat: {
+            maxHP: 45,
+            atk: 53,
+            def: 32,
+            spa: 38,
+            spd: 32,
+            cooldown: 12,
+            nature: 'attack',
+            types: ['normal','flying'],
+            color:'black',
+            sprite: 'pokemon/albaby',
+            size: 32,
+            defaultMoves: ['movePeck']
+        }
+    },
+
+    albatrim: {
+        stat: {
+            maxHP: 65,
+            atk: 68,
+            def: 47,
+            spa: 48,
+            spd: 47,
+            cooldown: 10,
+            nature: 'attack',
+            types: ['normal','flying'],
+            color:'black',
+            sprite: 'pokemon/albatrim',
+            size: 32,
+            defaultMoves: ['moveWingAttack']
+        }
+    },
+
+    cloakritter: {
+        stat: {
+            maxHP: 45,
+            atk: 55,
+            def: 35,
+            spa: 50,
+            spd: 35,
+            cooldown: 14,
+            nature: 'attack',
+            types: ['dark'],
+            color:'black',
+            sprite: 'pokemon/cloakritter',
+            size: 32,
+            defaultMoves: ['moveBite']
+        }
     },
 
     sanfi: {
@@ -107,7 +164,8 @@ const speciesList = {
             types: ['flying'],
             color:'black',
             sprite: 'pokemon/sanfi',
-            size: 32
+            size: 32,
+            defaultMoves: ['moveGust']
         }
     },
 
@@ -123,7 +181,8 @@ const speciesList = {
             types: ['flying'],
             color:'black',
             sprite: 'pokemon/avisera',
-            size: 32
+            size: 32,
+            defaultMoves: ['moveAirSlash']
         }
     },
 
@@ -139,7 +198,8 @@ const speciesList = {
             types: ['flying'],
             color:'black',
             sprite: 'pokemon/sanctuavia',
-            size: 32
+            size: 32,
+            defaultMoves: ['moveAeropulse']
         }
     }
 }

@@ -30,6 +30,56 @@ const moveList = {
         description: ''
     },
 
+    moveHyperBeam: {
+        name:'Hyper Beam',
+        type: 'normal',
+        category: 'special',
+        pattern: 'beam',
+        basePower: 150,
+        baseAccuracy: 90,
+        userSecondaryEffect: function(user) {
+            user.actionCounter += 5;
+        },
+        description: ''
+    },
+
+    moveGigaImpact: {
+        name:'Giga Impact',
+        type: 'normal',
+        category: 'physical',
+        pattern: 'wedge',
+        basePower: 150,
+        baseAccuracy: 90,
+        userSecondaryEffect: function(user) {
+            user.actionCounter += 5;
+        },
+        description: ''
+    },
+
+    moveSwordsDance: {
+        name:'Swords Dance',
+        type: 'normal',
+        category: 'status',
+        pattern: 'self',
+        baseAccuracy: Infinity,
+        userSecondaryEffect: function(user) {
+            user.changeStatStage('atk', 10);
+        },
+        description: ''
+    },
+
+    moveRecover: {
+        name:'Recover',
+        type: 'normal',
+        category: 'status',
+        pattern: 'self',
+        baseAccuracy: Infinity,
+        userSecondaryEffect: function(user) {
+            user.heal(Math.floor(user.stat.maxHP / 2));
+        },
+        description: ''
+    },
+
     moveKarateChop: {
         name:'Karate Chop',
         type: 'fighting',
@@ -40,68 +90,78 @@ const moveList = {
         description: ''
     },
 
-    moveIceBeam: {
-        name:'Ice Beam',
-        type: 'ice',
+    moveAuraSphere: {
+        name:'Aura Sphere',
+        type: 'fighting',
         category: 'special',
         pattern: 'beam',
         basePower: 90,
+        baseAccuracy: Infinity,
+        description: ''
+    },
+
+    movePeck: {
+        name:'Peck',
+        type: 'flying',
+        category: 'physical',
+        pattern: 'front',
+        basePower: 35,
         baseAccuracy: 100,
+        description: ''
+    },
+
+    moveGust: {
+        name:'Gust',
+        type: 'flying',
+        category: 'special',
+        pattern: 'front',
+        basePower: 40,
+        baseAccuracy: 100,
+        description: ''
+    },
+
+    moveWingAttack: {
+        name:'Wing Attack',
+        type: 'flying',
+        category: 'physical',
+        pattern: 'front',
+        basePower: 60,
+        baseAccuracy: 100,
+        description: ''
+    },
+
+    moveAirSlash: {
+        name:'Air Slash',
+        type: 'flying',
+        category: 'special',
+        pattern: 'front',
+        basePower: 75,
+        baseAccuracy: 95,
         targetSecondaryEffect: function(target) {
-            if (Math.floor(Math.random() * 100) < 10) {
-                target.inflictStatus('frostbite', 3);
-            }
+            target.actionCounter += 3;
         },
         description: ''
     },
 
-    moveFlamethrower: {
-        name:'Flamethrower',
-        type: 'fire',
+    moveAeropulse: {
+        name:'Aeropulse',
+        type: 'flying',
         category: 'special',
         pattern: 'beam',
-        basePower: 90,
-        baseAccuracy: 100,
-        targetSecondaryEffect: function(target) {
-            if (Math.floor(Math.random() * 100) < 10) {
-                target.inflictStatus('burn', 3);
-            }
+        basePower: 85,
+        baseAccuracy: Infinity,
+        description: ''
+    },
+
+    moveRoost: {
+        name:'Roost',
+        type: 'flying',
+        category: 'status',
+        pattern: 'self',
+        baseAccuracy: Infinity,
+        userSecondaryEffect: function(user) {
+            user.heal(Math.floor(user.stat.maxHP / 2));
         },
-        description: ''
-    },
-
-    moveThunderbolt: {
-        name:'Thunderbolt',
-        type: 'electric',
-        category: 'special',
-        pattern: 'beam',
-        basePower: 90,
-        baseAccuracy: 100,
-        targetSecondaryEffect: function(target) {
-            if (Math.floor(Math.random() * 100) < 10) {
-                target.inflictStatus('paralysis', 3);
-            }
-        },
-        description: ''
-    },
-
-    moveSurf: {
-        name:'Surf',
-        type: 'water',
-        category: 'special',
-        pattern: 'spread',
-        basePower: 90,
-        baseAccuracy: 100,
-        description: ''
-    },
-
-    moveHydroPump: {
-        name:'Hydro Pump',
-        type: 'water',
-        category: 'special',
-        pattern: 'beam',
-        basePower: 110,
-        baseAccuracy: 85,
         description: ''
     },
 
@@ -145,33 +205,93 @@ const moveList = {
         description: ''
     },
 
-    moveDragonPulse: {
-        name:'Dragon Pulse',
-        type: 'dragon',
-        category: 'special',
-        pattern: 'beam',
-        basePower: 85,
+    moveIronDefense: {
+        name:'Iron Defense',
+        type: 'steel',
+        category: 'status',
+        pattern: 'self',
         baseAccuracy: Infinity,
+        userSecondaryEffect: function(user) {
+            user.changeStatStage('def', 10);
+        },
         description: ''
     },
 
-    moveAeropulse: {
-        name:'Aeropulse',
-        type: 'flying',
-        category: 'special',
-        pattern: 'beam',
-        basePower: 85,
-        baseAccuracy: Infinity,
-        description: ''
-    },
-
-    moveAuraSphere: {
-        name:'Aura Sphere',
-        type: 'fighting',
+    moveFlamethrower: {
+        name:'Flamethrower',
+        type: 'fire',
         category: 'special',
         pattern: 'beam',
         basePower: 90,
-        baseAccuracy: Infinity,
+        baseAccuracy: 100,
+        targetSecondaryEffect: function(target) {
+            if (Math.floor(Math.random() * 100) < 10) {
+                target.inflictStatus('burn', 3);
+            }
+        },
+        description: ''
+    },
+
+    moveSurf: {
+        name:'Surf',
+        type: 'water',
+        category: 'special',
+        pattern: 'spread',
+        basePower: 90,
+        baseAccuracy: 100,
+        description: ''
+    },
+
+    moveHydroPump: {
+        name:'Hydro Pump',
+        type: 'water',
+        category: 'special',
+        pattern: 'beam',
+        basePower: 110,
+        baseAccuracy: 85,
+        description: ''
+    },
+
+    moveThunderbolt: {
+        name:'Thunderbolt',
+        type: 'electric',
+        category: 'special',
+        pattern: 'beam',
+        basePower: 90,
+        baseAccuracy: 100,
+        targetSecondaryEffect: function(target) {
+            if (Math.floor(Math.random() * 100) < 10) {
+                target.inflictStatus('paralysis', 3);
+            }
+        },
+        description: ''
+    },
+
+    moveIceBeam: {
+        name:'Ice Beam',
+        type: 'ice',
+        category: 'special',
+        pattern: 'beam',
+        basePower: 90,
+        baseAccuracy: 100,
+        targetSecondaryEffect: function(target) {
+            if (Math.floor(Math.random() * 100) < 10) {
+                target.inflictStatus('frostbite', 3);
+            }
+        },
+        description: ''
+    },
+
+    moveBite: {
+        name:'Bite',
+        type: 'dark',
+        category: 'physical',
+        pattern: 'front',
+        basePower: 60,
+        baseAccuracy: 100,
+        targetSecondaryEffect: function(target) {
+            target.actionCounter += 3;
+        },
         description: ''
     },
 
@@ -185,77 +305,13 @@ const moveList = {
         description: ''
     },
 
-    moveHyperBeam: {
-        name:'Hyper Beam',
-        type: 'normal',
+    moveDragonPulse: {
+        name:'Dragon Pulse',
+        type: 'dragon',
         category: 'special',
         pattern: 'beam',
-        basePower: 150,
-        baseAccuracy: 90,
-        userSecondaryEffect: function(user) {
-            user.actionCounter += 5;
-        },
-        description: ''
-    },
-
-    moveGigaImpact: {
-        name:'Giga Impact',
-        type: 'normal',
-        category: 'physical',
-        pattern: 'wedge',
-        basePower: 150,
-        baseAccuracy: 90,
-        userSecondaryEffect: function(user) {
-            user.actionCounter += 5;
-        },
-        description: ''
-    },
-
-    moveSwordsDance: {
-        name:'Swords Dance',
-        type: 'normal',
-        category: 'status',
-        pattern: 'self',
+        basePower: 85,
         baseAccuracy: Infinity,
-        userSecondaryEffect: function(user) {
-            user.changeStatStage('atk', 10);
-        },
-        description: ''
-    },
-
-    moveIronDefense: {
-        name:'Iron Defense',
-        type: 'steel',
-        category: 'status',
-        pattern: 'self',
-        baseAccuracy: Infinity,
-        userSecondaryEffect: function(user) {
-            user.changeStatStage('def', 10);
-        },
-        description: ''
-    },
-
-    moveRecover: {
-        name:'Recover',
-        type: 'normal',
-        category: 'status',
-        pattern: 'self',
-        baseAccuracy: Infinity,
-        userSecondaryEffect: function(user) {
-            user.heal(Math.floor(user.stat.maxHP / 2));
-        },
-        description: ''
-    },
-
-    moveRoost: {
-        name:'Roost',
-        type: 'flying',
-        category: 'status',
-        pattern: 'self',
-        baseAccuracy: Infinity,
-        userSecondaryEffect: function(user) {
-            user.heal(Math.floor(user.stat.maxHP / 2));
-        },
         description: ''
     }
 }

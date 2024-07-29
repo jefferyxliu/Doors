@@ -244,7 +244,7 @@ const mapData = {
         entitiesOnSpawn: [],
         randomEncounters: {
             spawnLocations: [{x:6, y:6},{x:6, y:38},{x:38, y:6},{x:38, y:38},{x:13, y:22},{x:22, y:13},{x:22, y:31},{x:31, y:22}], 
-            species: ['sanfi', 'sanfi', 'sanfi', 'sanfi','sanfi']
+            species: ['albaby','albaby','albaby','albaby','albaby','cloakritter','cloakritter','cloakritter','cloakritter','sanfi']
         }
     },
 
@@ -278,7 +278,7 @@ const mapData = {
         entitiesOnSpawn: [],
         randomEncounters: {
             spawnLocations: [{x:6, y:6},{x:6, y:38},{x:38, y:6},{x:38, y:38},{x:13, y:22},{x:22, y:13},{x:22, y:31},{x:31, y:22}], 
-            species: ['sanfi', 'sanfi', 'sanfi', 'sanfi','avisera']
+            species: ['albaby','albaby','albaby','albatrim','albatrim','cloakritter','cloakritter','cloakritter','cloakritter','sanfi']
         }
     },
 
@@ -310,7 +310,7 @@ const mapData = {
         entitiesOnSpawn: [],
         randomEncounters: {
             spawnLocations: [{x:6, y:6},{x:6, y:38},{x:38, y:6},{x:38, y:38},{x:13, y:22},{x:22, y:13},{x:22, y:31},{x:31, y:22}], 
-            species: ['sanfi', 'sanfi', 'sanfi', 'sanfi','avisera']
+            species: ['albaby','albaby','albaby','albatrim','albatrim','cloakritter','cloakritter','cloakritter','cloakritter','sanfi']
         }
     },
 
@@ -333,14 +333,15 @@ const mapData = {
         },
         items: [
             {name:'esirykTowerKey4', position: {x:2, y:42}},
-            {name:'floatStone', position: {x:22, y:18}}
+            {name:'floatStone', position: {x:22, y:18}},
+            {name:'TM:moveRoost', position: {x:42, y:42}}
         ],
         mapSprite:'pokemon/esirykTower',
         itemSprite:'items',
         entitiesOnSpawn: [],
         randomEncounters: {
             spawnLocations: [{x:6, y:6},{x:6, y:38},{x:38, y:6},{x:38, y:38},{x:13, y:22},{x:22, y:13},{x:22, y:31},{x:31, y:22}], 
-            species: ['sanfi', 'sanfi', 'avisera', 'avisera','avisera']
+            species: ['albaby','albaby','albaby','albatrim','albatrim','cloakritter','cloakritter','cloakritter','sanfi','avisera']
         }
     },
 
@@ -361,14 +362,15 @@ const mapData = {
         },
         items: [
             {name:'esirykTowerKey5', position: {x:2, y:2}},
-            {name:'floatStone', position: {x:22, y:18}}
+            {name:'floatStone', position: {x:22, y:18}},
+            {name:'TM:moveIceBeam', position: {x:42, y:2}}
         ],
         mapSprite:'pokemon/esirykTower',
         itemSprite:'items',
         entitiesOnSpawn: [],
         randomEncounters: {
             spawnLocations: [{x:6, y:6},{x:6, y:38},{x:38, y:6},{x:38, y:38},{x:13, y:22},{x:22, y:13},{x:22, y:31},{x:31, y:22}], 
-            species: ['sanfi', 'sanfi', 'avisera', 'avisera','sanctuavia']
+            species: ['albaby','albaby','albaby','albatrim','albatrim','cloakritter','cloakritter','cloakritter','sanfi','avisera']
         }
     },
 
@@ -386,6 +388,24 @@ const mapData = {
         items: [{name:'floatStone', position: {x:22, y:18}}],
         mapSprite:'pokemon/esirykTower',
         itemSprite:'items',
-        entitiesOnSpawn: []
+        entitiesOnSpawn: [
+            {
+                nickname: 'Sanctuavia',
+                speciesName: 'sanctuavia',
+                position: {
+                    x: 22,
+                    y: 17
+                },
+                options: {
+                    direction: 'ArrowDown',
+                    item: 'none',
+                    team: 1,
+                    control: false,
+                    moveset: [
+                        'moveAeropulse',
+                    ]
+                }
+            }
+        ]
     }
 }

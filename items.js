@@ -222,6 +222,16 @@ const itemList = {
         description: 'Opens a certain door.'
     },
 
+    victoryMessage: {
+        name:'Message',
+        spriteIndex: 0,
+        onUse: function(target) {
+            alert('You Win!');
+            target.dropItem();
+        },
+        description: ''
+    },
+
     floatStone: {
         name:'Float Stone',
         spriteIndex: 0,
@@ -261,4 +271,15 @@ const itemList = {
         cooldownStatModifier: 3/2,
         description: 'Makes the holder slower.'
     },
+}
+
+for (const move in moveList) {
+    itemList[`TM:${move}`] = {
+        name:`TM: ${moveList[move].name}`,
+        spriteIndex: 0,
+        onUse: function(target) {
+            target.learnMove(move);
+        },
+        description: ''
+    }
 }

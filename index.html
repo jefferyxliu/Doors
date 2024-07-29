@@ -92,8 +92,8 @@
 
 </div>
 <script src = "species.js"></script>
-<script src = "items.js"></script>
 <script src = "moves.js"></script>
+<script src = "items.js">//must load moves first (before TMs)</script> 
 <script src = "statusEffects.js"></script>
 <script>
     function csvToArray(s) {
@@ -304,7 +304,8 @@
 
         wait() {
             this.applyCooldown();
-            console.log(this.name, 'wait');
+            console.log(`${this.name} is waiting...`);
+            this.heal(Math.floor(this.stat.maxHP / 32));
             if (this.control) {
                 game.map.warp(this.position);
             }
@@ -439,9 +440,29 @@
         }
 
         useMove(n = 0) {
-            if (onUseMove(this, moveList[this.moveset[n]], {})) {
-                game.moveUsed = {user: this, move: moveList[this.moveset[n]]};
+            if (onUseMove(this, moveList[this.moveset[n % this.moveset.length]], {})) {
+                game.moveUsed = {user: this, move: moveList[this.moveset[n % this.moveset.length]]};
             }
+        }
+
+        learnMove(moveName) {
+            if (this.moveset.includes(moveName)) {
+                console.log(`${this.name} already knows ${moveList[moveName].name}.`);
+                return false;
+            }
+            this.moveset.push(moveName);
+            if (this.moveset.length <= 4) {
+                console.log(`${this.name} learned ${moveList[moveName].name}.`);
+                return true;
+            }
+            let n;
+            while (!['0','1','2','3','4'].includes(n)) {
+                n = prompt(`${this.name} can't learn more than 4 moves. Select a move to delete (0,1,2,3,4): \n ${this.moveset}`);
+            }
+            console.log(`${this.name} learned ${moveList[moveName].name}.`);
+            console.log(`${this.name} forgot ${moveList[this.moveset[JSON.parse(n)]].name}.`);
+            this.moveset.splice(JSON.parse(n), 1);
+            return true;
         }
 
         getTarget() {
@@ -504,11 +525,13 @@
         }
 
         dropItem() {
-            if (this.item != 'none') {
-                game.map.spawnItem(this.item, this.position);
-                console.log(`${this.name} dropped ${this.item}`);
-                this.item = 'none';
+            if (this.item == 'none') {
+                return false;
             }
+            game.map.spawnItem(this.item, this.position);
+            console.log(`${this.name} dropped ${this.item}`);
+            this.item = 'none';
+            return true;
         }
 
         useItem() {
@@ -521,17 +544,25 @@
         }
 
         heal(amount) {
-            if (this.isAlive()) {
-                this.HP = Math.min(this.stat.maxHP, this.HP + amount);
-                console.log(`${this.name} restored ${amount} HP.`);
+            if (!this.isAlive()) {
+                return false;
             }
+            if (this.HP >= this.stat.maxHP) {
+                return false;
+            }
+            const healAmount = Math.min(amount, this.stat.maxHP - this.HP)
+            this.HP += healAmount;
+            console.log(`${this.name} restored ${healAmount} HP.`);
+            return true;
         }
 
         damage(amount) {
-            if (this.isAlive()) {
-                this.HP = Math.max(0, this.HP - amount);
-                console.log(`${this.name} took ${amount} damage.`);
+            if (!this.isAlive()) {
+                return false;
             }
+            this.HP = Math.max(0, this.HP - amount);
+            console.log(`${this.name} took ${amount} damage.`);
+            return true;
         }
 
         endTurn() {
@@ -948,9 +979,7 @@
                         item: 'none',
                         team: 1,
                         control: false,
-                        moveset: [
-                            'moveTackle',
-                        ]
+                        moveset: speciesList[s].stat.defaultMoves
                     }
                 })
             }
@@ -1132,12 +1161,12 @@
         new Entity({
             nickname: 'You',
             stat: {
-                maxHP: 80,
+                maxHP: 100,
                 atk: 80,
-                def: 80,
+                def: 100,
                 spa: 80,
-                spd: 80,
-                cooldown: 12,
+                spd: 100,
+                cooldown: 10,
                 nature: 'attack',
                 types: ['normal'],
                 color:'black',
@@ -1150,14 +1179,11 @@
             },
             options: {
                 direction: 'ArrowRight',
-                item: 'leftovers',
+                item: 'none',
                 team: 0,
                 control: true,
                 moveset: [
-                    'moveTackle',
-                    'moveIceBeam',
-                    'moveHyperBeam',
-                    'moveRecover'
+                    'moveTackle'
                 ]
             }
         }),
