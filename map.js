@@ -398,7 +398,7 @@ const mapData = {
                 },
                 options: {
                     direction: 'ArrowDown',
-                    item: 'none',
+                    item: 'victoryMessage',
                     team: 1,
                     control: false,
                     moveset: [
