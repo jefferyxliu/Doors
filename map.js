@@ -278,7 +278,7 @@ const mapData = {
         entitiesOnSpawn: [],
         randomEncounters: {
             spawnLocations: [{x:6, y:6},{x:6, y:38},{x:38, y:6},{x:38, y:38},{x:13, y:22},{x:22, y:13},{x:22, y:31},{x:31, y:22}], 
-            species: ['albaby','albaby','albaby','albatrim','albatrim','cloakritter','cloakritter','cloakritter','cloakritter','sanfi']
+            species: ['albaby','albaby','albaby','albatrim','albatrim','cloakritter','cloakritter','cloakritter','flitterobe','sanfi']
         }
     },
 
@@ -310,7 +310,7 @@ const mapData = {
         entitiesOnSpawn: [],
         randomEncounters: {
             spawnLocations: [{x:6, y:6},{x:6, y:38},{x:38, y:6},{x:38, y:38},{x:13, y:22},{x:22, y:13},{x:22, y:31},{x:31, y:22}], 
-            species: ['albaby','albaby','albaby','albatrim','albatrim','cloakritter','cloakritter','cloakritter','cloakritter','sanfi']
+            species: ['albaby','albaby','albaby','albatrim','albatrim','cloakritter','cloakritter','cloakritter','flitterobe','sanfi']
         }
     },
 
@@ -341,7 +341,7 @@ const mapData = {
         entitiesOnSpawn: [],
         randomEncounters: {
             spawnLocations: [{x:6, y:6},{x:6, y:38},{x:38, y:6},{x:38, y:38},{x:13, y:22},{x:22, y:13},{x:22, y:31},{x:31, y:22}], 
-            species: ['albaby','albaby','albaby','albatrim','albatrim','cloakritter','cloakritter','cloakritter','sanfi','avisera']
+            species: ['albaby','albaby','albaby','albatrim','albatrim','cloakritter','flitterobe','flitterobe','sanfi','avisera']
         }
     },
 
@@ -370,7 +370,7 @@ const mapData = {
         entitiesOnSpawn: [],
         randomEncounters: {
             spawnLocations: [{x:6, y:6},{x:6, y:38},{x:38, y:6},{x:38, y:38},{x:13, y:22},{x:22, y:13},{x:22, y:31},{x:31, y:22}], 
-            species: ['albaby','albaby','albaby','albatrim','albatrim','cloakritter','cloakritter','cloakritter','sanfi','avisera']
+            species: ['albaby','albaby','albaby','albatrim','albatrim','cloakritter','flitterobe','flitterobe','sanfi','avisera']
         }
     },
 

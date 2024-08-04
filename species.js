@@ -152,6 +152,23 @@ const speciesList = {
         }
     },
 
+    flitterobe: {
+        stat: {
+            maxHP: 60,
+            atk: 75,
+            def: 55,
+            spa: 70,
+            spd: 50,
+            cooldown: 12,
+            nature: 'attack',
+            types: ['dark','flying'],
+            color:'black',
+            sprite: 'pokemon/flitterobe',
+            size: 32,
+            defaultMoves: ['moveBite']
+        }
+    },
+
     sanfi: {
         stat: {
             maxHP: 35,
