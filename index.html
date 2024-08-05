@@ -883,7 +883,7 @@
             if (Object.hasOwn(this.warpZones, `${coord.x},${coord.y}`)) {
                 document.getElementById('StatBox').innerHTML = '';
                 const w = this.warpZones[`${coord.x},${coord.y}`];
-                game.loadMap(game.spriteList.filter((sprite)=>{return sprite.team == 0}), w.name, w.spawnLocation)
+                game.loadMap(game.spriteList.filter((sprite)=>{return sprite.team == 0}), w.name, w.spawnLocation);
             }
         }
 
@@ -1065,8 +1065,14 @@
                 this.spriteList.splice(this.iter, 1);
                 this.iter = this.iter % this.spriteList.length;
                 this.drawEverything(this.you.position);
-                print(`${sprite.name} fainted.`)
+                print(`${sprite.name} fainted.`);
                 setTimeout(()=>{game.drawEverything(game.you.position);}, 0);
+                if (this.spriteList.filter((sprite) => {return sprite.control}).length == 0) {
+                    alert('You Died. Restart?');
+                    document.getElementById('StatBox').innerHTML = '';
+                    game.loadMap(getRestartSpriteList(), 'doors');
+                    this.iter = 0;
+                }
                 return false;
             }
 
@@ -1195,74 +1201,76 @@
 </script>
 <script src = "map.js"></script>
 <script>
-    const spriteList = [
-        new Entity({
-            nickname: 'You',
-            stat: {
-                maxHP: 100,
-                atk: 80,
-                def: 100,
-                spa: 80,
-                spd: 100,
-                cooldown: 10,
-                nature: 'attack',
-                types: ['normal'],
-                color:'black',
-                sprite: 'human',
-                size: 24
-            },
-            position: {
-                x: 25, 
-                y: 17
-            },
-            options: {
-                direction: 'ArrowRight',
-                item: 'none',
-                team: 0,
-                control: true,
-                moveset: [
-                    'moveTackle'
-                ]
-            }
-        }),
+    function getRestartSpriteList() {
+        return [
+            new Entity({
+                nickname: 'You',
+                stat: {
+                    maxHP: 100,
+                    atk: 80,
+                    def: 100,
+                    spa: 80,
+                    spd: 100,
+                    cooldown: 10,
+                    nature: 'attack',
+                    types: ['normal'],
+                    color:'black',
+                    sprite: 'human',
+                    size: 24
+                },
+                position: {
+                    x: 25, 
+                    y: 17
+                },
+                options: {
+                    direction: 'ArrowRight',
+                    item: 'none',
+                    team: 0,
+                    control: true,
+                    moveset: [
+                        'moveTackle'
+                    ]
+                }
+            }),
 
-        new Entity({
-            nickname: 'Random Noob',
-            stat: {
-                maxHP: 10,
-                atk: 10,
-                def: 10,
-                spa: 10,
-                spd: 10,
-                cooldown: 12,
-                nature: 'follow team',
-                types: ['normal'],
-                color:'black',
-                sprite: 'human2',
-                size: 24
-            },
-            position: {
-                x: 53,
-                y: 17
-            },
-            options: {
-                direction: 'ArrowRight',
-                item: 'none',
-                team: 0,
-                control: false,
-                moveset: [
-                    'moveTackle',
-                    'moveKarateChop',
-                    'moveSwordsDance',
-                    'moveQuickAttack'
-                ]
-            }
-        })
-    ]; 
-
+            new Entity({
+                nickname: 'Random Noob',
+                stat: {
+                    maxHP: 10,
+                    atk: 10,
+                    def: 10,
+                    spa: 10,
+                    spd: 10,
+                    cooldown: 12,
+                    nature: 'follow team',
+                    types: ['normal'],
+                    color:'black',
+                    sprite: 'human2',
+                    size: 24
+                },
+                position: {
+                    x: 53,
+                    y: 17
+                },
+                options: {
+                    direction: 'ArrowRight',
+                    item: 'none',
+                    team: 0,
+                    control: false,
+                    moveset: [
+                        'moveTackle',
+                        'moveKarateChop',
+                        'moveSwordsDance',
+                        'moveQuickAttack'
+                    ]
+                }
+            })
+        ];
+    }
+    
     //alert('Escape the hotel. Beware the entities!');
     resize();
-    game.loadMap(spriteList, 'doors');
+    game.loadMap(getRestartSpriteList(), 'doors');
     //setTimeout(game.doStuff, 500);
 
     function secretTest() {
