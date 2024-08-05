@@ -14,10 +14,27 @@
         background-color: black;
       }
 
+      #textbox {
+        overflow: scroll;
+        border-radius: 8px;
+        background-image: linear-gradient(to right, rgba(0,0,0,0.5), rgba(0,0,0,0)); 
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        color: white;
+        position: absolute;
+        height: 80px;
+        max-height: 80px;
+        padding-left: 5px;
+        padding-bottom: 5px;
+        margin-left: 1px;
+        margin-bottom: 5px;
+        bottom: 0;
+      }
+
       .hide {
         display: none;
         background-color: purple;
       }
+
       #gridDisplay {
         border: 1pt solid black;
         border-radius: 8px;
@@ -28,6 +45,7 @@
         width: min-content;
         gap: 5px;
       }
+      
       #StatBox {
         overflow: scroll;
         width: 200px;
@@ -48,7 +66,7 @@
         display: grid;
         grid-template-rows: 4, 4;
         grid-auto-columns: 80px;
-        grid-auto-rows: 38px;
+        grid-auto-rows: 0px 38px 38px;
         width: min-content;
       }
       #gridButton2 {
@@ -70,16 +88,20 @@
 </div>
 <div>
     <div id="gridDisplay">
-        <canvas id="canvas2" width="device-width" height="device-width"></canvas>
+        <div style="grid-row: 1; grid-column: 1; position: relative;">
+            <canvas id="canvas2" width="device-width" height="device-width"></canvas>
+            <div id="textbox"></div>
+        </div>
         <div style="grid-row: 1; grid-column: 2;" id = "StatBox"></div>
+        
     </div>
     <div id="gridDisplay2">
         <div id="gridButton">
-            <input type="button" id="KeyZ" value="Drop (Z)" style="grid-row: 1; grid-column: 1;"></input>
-            <input type="button" id="KeyX" value="Pick Up (X)" style="grid-row: 1; grid-column: 2;"></input>
-            <input type="button" id="KeyC" value="Use Item (C)" style="grid-row: 1; grid-column: 3;"></input>
-            <input type="button" id="KeyV" value="Wait (V)" style="grid-row: 1; grid-column: 4;"></input>
-            <input type="button" id="Space" value="Attack (Space)" style="grid-row: 2; grid-column: 1 / 5;"></input>
+            <input type="button" id="KeyZ" value="Drop (Z)" style="grid-row: 2; grid-column: 1;"></input>
+            <input type="button" id="KeyX" value="Pick Up (X)" style="grid-row: 2; grid-column: 2;"></input>
+            <input type="button" id="KeyC" value="Use Item (C)" style="grid-row: 2; grid-column: 3;"></input>
+            <input type="button" id="KeyV" value="Wait (V)" style="grid-row: 2; grid-column: 4;"></input>
+            <input type="button" id="Space" value="Attack (Space)" style="grid-row: 3; grid-column: 1 / 5;"></input>
         </div>
         <div id="gridButton2">
             <input type="button" id="ArrowUp" value="&uarr;" style="grid-row: 1; grid-column: 2;"></input>
@@ -108,7 +130,8 @@
     function deepCopy(object) {
         return JSON.parse(JSON.stringify(object));
     }
-    
+
+    const textbox = document.getElementById('textbox');
     const canvas = document.getElementById('canvas');
     const canvas2 = document.getElementById('canvas2');
     const h = 11;
@@ -117,6 +140,17 @@
     canvas.height = 24 * h;
     const ctx = canvas.getContext('2d');
     const ctx2 = canvas2.getContext('2d');
+
+
+    function print(s) {
+        console.log(s);
+        textbox.innerText += s + '\n';
+        textbox.scroll({
+            top: textbox.scrollHeight,
+            left: 0,
+            behavior: "smooth"
+        });
+    }
 
     function resize() {
         const statBox = document.getElementById('StatBox');
@@ -137,6 +171,7 @@
             const m = Math.min(window.innerHeight - verticalMargin, window.innerWidth - horizontalMargin);
             canvas2.width = m;
             canvas2.height = m;
+            textbox.clientWidth = m - 10;
             statBox.style.height = `${m}px`;
         } else {
             statBox.style.gridRow = 2;
@@ -146,6 +181,7 @@
             const m = Math.min(window.innerHeight - verticalMargin, window.innerWidth - horizontalMargin);
             canvas2.width = m;
             canvas2.height = m;
+            textbox.clientWidth = m - 10;
             statBox.style.height = `${window.innerHeight - m - verticalMargin + 58}px`;
         }
         if (game.loaded) {
@@ -256,7 +292,7 @@
 
         generateHPBar() {
             document.getElementById('StatBox').innerHTML += 
-                `<div id = "${this.secretID}-Box" style="border: 1pt solid black; border-radius: 8px; padding: 5px;">\
+                `<div id = "${this.secretID}-Box" style="display: none; border: 1pt solid black; border-radius: 8px; padding: 5px;">\
                     <div id = "${this.secretID}"></div>\
                     <canvas id = "${this.secretID}-Sprite" height="24px" width="24px" style="border: none; background-color: transparent;"></canvas>\
                     <canvas id = "${this.secretID}-HP" height="15" width="100"></canvas>\
@@ -304,7 +340,7 @@
 
         wait() {
             this.applyCooldown();
-            console.log(`${this.name} is waiting...`);
+            //print(`${this.name} is waiting...`);
             this.heal(Math.floor(this.stat.maxHP / 32));
             if (this.control) {
                 game.map.warp(this.position);
@@ -371,7 +407,7 @@
                 }
                 this.statusEffects[status] = turns;
 
-                console.log(message[status]);
+                print(message[status]);
             }
             return true;
         }
@@ -410,11 +446,11 @@
             }
 
             const target = this.getTarget();
-            //console.log(target);
+            //print(target);
             if (!target) {
                 this.position = addCoords(this.position, game.controls[code]);
                 this.applyCooldown();
-                console.log(this.name, 'move');
+                //print(`${this.name} moved.`);
                 return true;
             }
             
@@ -440,6 +476,7 @@
         }
 
         useMove(n = 0) {
+            print('');
             if (onUseMove(this, moveList[this.moveset[n % this.moveset.length]], {})) {
                 game.moveUsed = {user: this, move: moveList[this.moveset[n % this.moveset.length]]};
             }
@@ -447,20 +484,20 @@
 
         learnMove(moveName) {
             if (this.moveset.includes(moveName)) {
-                console.log(`${this.name} already knows ${moveList[moveName].name}.`);
+                print(`${this.name} already knows ${moveList[moveName].name}.`);
                 return false;
             }
             this.moveset.push(moveName);
             if (this.moveset.length <= 4) {
-                console.log(`${this.name} learned ${moveList[moveName].name}.`);
+                print(`${this.name} learned ${moveList[moveName].name}.`);
                 return true;
             }
             let n;
             while (!['0','1','2','3','4'].includes(n)) {
                 n = prompt(`${this.name} can't learn more than 4 moves. Select a move to delete (0,1,2,3,4): \n ${this.moveset}`);
             }
-            console.log(`${this.name} learned ${moveList[moveName].name}.`);
-            console.log(`${this.name} forgot ${moveList[this.moveset[JSON.parse(n)]].name}.`);
+            print(`${this.name} learned ${moveList[moveName].name}.`);
+            print(`${this.name} forgot ${moveList[this.moveset[JSON.parse(n)]].name}.`);
             this.moveset.splice(JSON.parse(n), 1);
             return true;
         }
@@ -475,7 +512,7 @@
                     st = item.onModifySolidTiles(st);
                 };
             }
-            //console.log(st);
+            //print(st);
             if (game.map.isWall(fr, st)) {
                 return 'wall';
             }
@@ -520,7 +557,7 @@
         pickUpItem() {
             if (this.isAlive() && this.item == 'none') {
                 this.item = game.map.getItem(this.position);
-                console.log(`${this.name} picked up ${this.item}`);
+                print(`${this.name} picked up ${itemList[this.item].name}`);
             }
         }
 
@@ -529,14 +566,14 @@
                 return false;
             }
             game.map.spawnItem(this.item, this.position);
-            console.log(`${this.name} dropped ${this.item}`);
+            print(`${this.name} dropped ${itemList[this.item].name}`);
             this.item = 'none';
             return true;
         }
 
         useItem() {
             if (this.isAlive() && this.item != 'none') {
-                console.log(`${this.name} used ${this.item}`);
+                print(`${this.name} used ${itemList[this.item].name}`);
                 itemList[this.item].onUse(this);
             } else {
                 this.wait();
@@ -552,7 +589,7 @@
             }
             const healAmount = Math.min(amount, this.stat.maxHP - this.HP)
             this.HP += healAmount;
-            console.log(`${this.name} restored ${healAmount} HP.`);
+            print(`> ${this.name} restored ${healAmount} HP.`);
             return true;
         }
 
@@ -561,7 +598,7 @@
                 return false;
             }
             this.HP = Math.max(0, this.HP - amount);
-            console.log(`${this.name} took ${amount} damage.`);
+            print(`> ${this.name} took ${amount} damage.`);
             return true;
         }
 
@@ -687,7 +724,7 @@
                 }
                 
                 const s = this.smartGetDistance(addCoords(target.position, game.controls[game.opposite[target.direction]]));
-                //console.log(s);
+                //print(s);
                 if (s.length == 0) {
                     this.returnTowardStart();
                     return;
@@ -751,7 +788,7 @@
                 }
                 
                 const s = this.smartGetDistance(addCoords(target.position, game.controls[game.opposite[target.direction]]));
-                    //console.log(s);
+                    //print(s);
                 if (s.length == 0) {
                     this.wait();
                     return;
@@ -988,7 +1025,7 @@
         loadMap: function(s, m, spawnLocation = false) {
             this.map = new Map(deepCopy(mapData[m]));
             this.spriteList = s;
-            //console.log(this.spriteList);
+            //print(this.spriteList);
             this.you = this.spriteList[0];
             this.loaded = true;
 
@@ -1028,6 +1065,7 @@
                 this.spriteList.splice(this.iter, 1);
                 this.iter = this.iter % this.spriteList.length;
                 this.drawEverything(this.you.position);
+                print(`${sprite.name} fainted.`)
                 setTimeout(()=>{game.drawEverything(game.you.position);}, 0);
                 return false;
             }

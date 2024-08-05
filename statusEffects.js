@@ -54,8 +54,8 @@ const statusList = {
             }
         },
         onTurnEnd: function(target) {
+            print(`${target.name} was hurt by its frostbite.`);
             target.damage(Math.floor(target.stat.maxHP / 16));
-            console.log(`${target.name} was hurt by its frostbite.`);
         }
     },
 
@@ -69,16 +69,16 @@ const statusList = {
             }
         },
         onTurnEnd: function(target) {
+            print(`${target.name} was hurt by its burn.`);
             target.damage(Math.floor(target.stat.maxHP / 16));
-            console.log(`${target.name} was hurt by its burn.`);
         }
     },
 
     poison: {
         category: 'non-volatile',
         onTurnEnd: function(target) {
+            print(`${target.name} was hurt by poison.`);
             target.damage(Math.floor(target.stat.maxHP / 8));
-            console.log(`${target.name} was hurt by poison.`);
         }
     },
 

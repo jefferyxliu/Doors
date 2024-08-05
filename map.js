@@ -44,7 +44,8 @@ const mapData = {
             [6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6],
         ],  
         warpZones: {
-            '23,17': {name: 'esirykTower1F', spawnLocation: {x:22, y:22}}
+            '23,17': {name: 'esirykTower1F', spawnLocation: {x:22, y:22}},
+            '23,18': {name: 'test', spawnLocation: {x:2, y:2}}
         },
         entitiesOnSpawn: [
             {

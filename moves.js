@@ -317,7 +317,7 @@ const moveList = {
 }
 
 function onUseMove(user, move, options) { //returns true if move user succesfully executes
-    console.log(`${user.name} used ${move.name}!`)
+    print(`${user.name} used ${move.name}!`)
     user.applyCooldown();
 
     if (game.map.isHidden(user.position) || !user.isAlive()) {
@@ -327,7 +327,7 @@ function onUseMove(user, move, options) { //returns true if move user succesfull
     const targets = getTargets(user, move.pattern);
     const userFailed = userFailCheck(user, targets, move) 
     if (userFailed) {
-        console.log(userFailed);
+        print(userFailed);
         return false;
     }
 
@@ -390,7 +390,7 @@ function executeMoveOnTarget(user, target, move, spreadModifier) {
     const targetFailed = targetFailCheck(user, target, move);
                 
     if (targetFailed) {
-        console.log(targetFailed);
+        print(targetFailed);
         return false;
     }
 
@@ -406,7 +406,7 @@ function executeMoveOnTarget(user, target, move, spreadModifier) {
 
 function damageFormula(user, target, move, options) {
     const damageAdjust = 0.6;
-    let s = '';
+    let s = [];
 
     let attackingStat, defendingStat;
     
@@ -436,7 +436,7 @@ function damageFormula(user, target, move, options) {
     //critical hit modifier
     if (Math.floor(Math.random() * 24) == 0) {
         damage *= 1.5;
-        s += 'Critical hit!\n'
+        s.push('Critical hit!');
     }
 
     //random modifier
@@ -451,10 +451,10 @@ function damageFormula(user, target, move, options) {
     const typeModifier = typeChart.getEffectiveModifier(move.type, target.types);
     damage *= typeModifier;
     if (typeModifier > 1) {
-        s += 'It\'s super effective!\n'
+        s.push('It\'s super effective!')
     }
     if (typeModifier < 1) {
-        s += 'It\'s not very effective...\n'
+        s.push('It\'s not very effective...')
     }
 
     //status modifier (e.g. burn half physical damage)
@@ -467,8 +467,9 @@ function damageFormula(user, target, move, options) {
 
     //at least 1
     damage = Math.max(Math.floor(damage), 1);
-
-    console.log(s);
+    if (s.length > 0) {
+        print(s.join('\n'));
+    }
     return damage;
 }
 
