@@ -250,8 +250,11 @@ const itemList = {
             target.dropItem();
         },
         onTurnEnd: function(target) {
-            target.heal(Math.floor(target.stat.maxHP / 16));
+            if (target.HP == target.stat.maxHP) {
+                return;
+            }
             print(`${target.name} healed with Leftovers`);
+            target.heal(Math.floor(target.stat.maxHP / 16));
         },
         description: 'Heals the holder a little bit at the end of every turn.'
     },

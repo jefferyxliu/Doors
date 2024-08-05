@@ -341,7 +341,12 @@
         wait() {
             this.applyCooldown();
             //print(`${this.name} is waiting...`);
-            this.heal(Math.floor(this.stat.maxHP / 32));
+            if (this.stat.maxHP > this.HP) {
+                print('');
+                print(`${this.name} is resting a little`);
+                this.heal(2);
+            }
+            
             if (this.control) {
                 game.map.warp(this.position);
             }
@@ -880,11 +885,17 @@
         }
 
         warp(coord) {
-            if (Object.hasOwn(this.warpZones, `${coord.x},${coord.y}`)) {
-                document.getElementById('StatBox').innerHTML = '';
-                const w = this.warpZones[`${coord.x},${coord.y}`];
-                game.loadMap(game.spriteList.filter((sprite)=>{return sprite.team == 0}), w.name, w.spawnLocation);
+            if (!Object.hasOwn(this.warpZones, `${coord.x},${coord.y}`)) {
+                return false;
             }
+            const w = this.warpZones[`${coord.x},${coord.y}`];
+            if (prompt(`Proceed to ${w.name}? (y/n)`,'y') != 'y') {
+                return false;
+            }
+            document.getElementById('StatBox').innerHTML = '';
+
+            game.loadMap(game.spriteList.filter((sprite)=>{return sprite.team == 0}), w.name, w.spawnLocation);
+            return true;
         }
 
 /*         draw(camera) {
@@ -928,7 +939,7 @@
     }
 
     document.addEventListener('keydown', e => {
-        if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Space', 'KeyZ', 'KeyX', 'KeyC', 'KeyV','KeyH','Digit1','Digit2','Digit3','Digit4'].includes(e.code)) {
+        if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Space', 'KeyZ', 'KeyX', 'KeyC', 'KeyV','KeyH','KeyP','Digit1','Digit2','Digit3','Digit4'].includes(e.code)) {
             game.actionQueue.push(e.code);
             game.doStuff();
         }
@@ -965,6 +976,8 @@
 
         spriteList: false,
 
+        controlAll: false,
+
         iter: 0,
 
         controls: {
@@ -985,6 +998,17 @@
             'ArrowLeft': 'ArrowRight',
             'ArrowUp': 'ArrowDown',
             'ArrowDown': 'ArrowUp',
+        },
+
+        toggleControl: function() {
+            this.controlAll = !this.controlAll;
+            alert(`Now controlling ${this.controlAll ? 'whole team' : 'current character'}!`)
+            for (let i = 0; i < this.spriteList.length; i++) {
+                const sprite = this.spriteList[i];
+                if (sprite.team == 0 && i != this.iter) {
+                    sprite.control = this.controlAll;
+                }
+            }
         },
 
         spawnEntity: function(data) {
@@ -1049,6 +1073,7 @@
                 }
             }
 
+            this.iter = 0;
             setTimeout(()=>{
                 game.doStuff();
             }, 500);
@@ -1072,6 +1097,7 @@
                     document.getElementById('StatBox').innerHTML = '';
                     game.loadMap(getRestartSpriteList(), 'doors');
                     this.iter = 0;
+                    this.actionQueue = [];
                 }
                 return false;
             }
@@ -1129,9 +1155,12 @@
             if (code == 'KeyV') {
                 this.you.wait();
             }
+            if (code == 'KeyP') {
+                this.toggleControl();
+            }
             this.actionQueue.splice(0,1);
 
-            if (sprite.actionCounter == 0) {
+            if (sprite.actionCounter <= 0) {
                 sprite.actionCounter++;
                 this.drawEverything(this.you.position);
                 setTimeout(()=>{game.doStuff();}, 500);
@@ -1204,7 +1233,7 @@
     function getRestartSpriteList() {
         return [
             new Entity({
-                nickname: 'You',
+                nickname: 'Human',
                 stat: {
                     maxHP: 100,
                     atk: 80,
@@ -1212,7 +1241,7 @@
                     spa: 80,
                     spd: 100,
                     cooldown: 10,
-                    nature: 'attack',
+                    nature: 'follow team',
                     types: ['normal'],
                     color:'black',
                     sprite: 'human',

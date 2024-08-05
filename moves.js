@@ -317,13 +317,14 @@ const moveList = {
 }
 
 function onUseMove(user, move, options) { //returns true if move user succesfully executes
-    print(`${user.name} used ${move.name}!`)
+    
     user.applyCooldown();
 
     if (game.map.isHidden(user.position) || !user.isAlive()) {
         return false;
     }
 
+    print(`${user.name} used ${move.name}!`);
     const targets = getTargets(user, move.pattern);
     const userFailed = userFailCheck(user, targets, move) 
     if (userFailed) {
@@ -384,6 +385,7 @@ function targetFailCheck(user, target, move) {
 
 function executeMoveOnTarget(user, target, move, spreadModifier) {
     if (game.map.isHidden(target.position)) {
+        print(`${target.name} protected itself.`);
         return false;
     }
 
