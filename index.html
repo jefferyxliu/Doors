@@ -4,17 +4,30 @@
   <head>
   <meta name="viewport" content="height=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <style>
-      canvas {
+
+    canvas {
         border: 1pt solid black;
         border-radius: 8px;
         background-color: grey;
-      }
+    }
 
-      #canvas2 {
+    #canvas2 {
         background-color: black;
-      }
+    }
 
-      #textbox {
+    input {  
+        text-wrap: wrap;
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        font-size: 12px;
+    }
+
+    select {  
+        text-wrap: wrap;
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        font-size: 12px;
+    }
+
+    #textbox {
         overflow: scroll;
         border-radius: 8px;
         background-image: linear-gradient(to right, rgba(0,0,0,0.5), rgba(0,0,0,0)); 
@@ -28,14 +41,14 @@
         margin-left: 1px;
         margin-bottom: 5px;
         bottom: 0;
-      }
+    }
 
-      .hide {
+    .hide {
         display: none;
         background-color: purple;
-      }
+    }
 
-      #gridDisplay {
+    #gridDisplay {
         border: 1pt solid black;
         border-radius: 8px;
         padding: 5px;
@@ -44,13 +57,14 @@
         grid-auto-columns: min-content;
         width: min-content;
         gap: 5px;
-      }
+    }
       
-      #StatBox {
+    #StatBox {
         overflow: scroll;
         width: 200px;
-      }
-      #gridDisplay2 {
+    }
+    
+    #gridDisplay2 {
         border: 1pt solid black;
         border-radius: 8px;
         padding: 5px;
@@ -61,25 +75,24 @@
         gap: 5px;
         bottom: 0;
         position: fixed;
-      }
-      #gridButton {
+    }
+
+    #gridButton {
         display: grid;
         grid-template-rows: 4, 4;
         grid-auto-columns: 80px;
         grid-auto-rows: 0px 38px 38px;
         width: min-content;
-      }
-      #gridButton2 {
+    }
+      
+    #gridButton2 {
         display: grid;
         grid-template-rows: 3, 3;
         grid-auto-columns: 38px;
         grid-auto-rows: 38px;
         width: min-content;
         justify-self: center;
-      }
-      input {
-        font-size: 12px;
-      }
+    }
   </style>
   </head>
 <body>
@@ -101,9 +114,11 @@
             <input type="button" id="KeyX" value="Pick Up (X)" style="grid-row: 2; grid-column: 2;"></input>
             <input type="button" id="KeyC" value="Use Item (C)" style="grid-row: 2; grid-column: 3;"></input>
             <input type="button" id="KeyV" value="Wait (V)" style="grid-row: 2; grid-column: 4;"></input>
-            <input type="button" id="Space" value="Attack (Space)" style="grid-row: 3; grid-column: 1 / 5;"></input>
+            <input type="button" id="Space" value="Use Attack (Space) >>" style="grid-row: 3; grid-column: 1 / 3;"></input>
+            <select id="moveSelector" style="grid-row: 3; grid-column: 3 / 5;"></select>
         </div>
         <div id="gridButton2">
+            <input type="button" id="KeyP" value="Team Mode" style="grid-row: 1; grid-column: 3; font-size: 10px;"></input>
             <input type="button" id="ArrowUp" value="&uarr;" style="grid-row: 1; grid-column: 2;"></input>
             <input type="button" id="ArrowDown" value="&darr;" style="grid-row: 2; grid-column: 2;"></input>
             <input type="button" id="ArrowLeft" value="&larr;" style="grid-row: 2; grid-column: 1;"></input>
@@ -140,7 +155,7 @@
     canvas.height = 24 * h;
     const ctx = canvas.getContext('2d');
     const ctx2 = canvas2.getContext('2d');
-
+    const moveSelector = document.getElementById('moveSelector');
 
     function print(s) {
         console.log(s);
@@ -271,6 +286,7 @@
             this.control = data.options.control;
 
             this.moveset = data.options.moveset;
+            this.moveSelected = 0;
             this.item = data.options.item;
             this.statusEffects = {};
 
@@ -292,11 +308,20 @@
 
         generateHPBar() {
             document.getElementById('StatBox').innerHTML += 
-                `<div id = "${this.secretID}-Box" style="display: none; border: 1pt solid black; border-radius: 8px; padding: 5px;">\
+                `<div id = "${this.secretID}-Box" style="display: none; border: 1pt solid black; border-radius: 8px; padding: 5px; font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; font-size: 12px">\
                     <div id = "${this.secretID}"></div>\
                     <canvas id = "${this.secretID}-Sprite" height="24px" width="24px" style="border: none; background-color: transparent;"></canvas>\
                     <canvas id = "${this.secretID}-HP" height="15" width="100"></canvas>\
                 </div>`;
+        }
+
+        printMoveset() {
+            const s = []
+            for (let i = 0; i < this.moveset.length; i++) {
+                const moveName = this.moveset[i];
+                s.push(`<option value="${i}" ${i == this.moveSelected ? 'selected' : ''}>${i+1}: ${moveList[moveName].name}</option>`);
+            }
+            moveSelector.innerHTML = s.join(' ')
         }
 
         isAlive() {
@@ -495,6 +520,7 @@
             this.moveset.push(moveName);
             if (this.moveset.length <= 4) {
                 print(`${this.name} learned ${moveList[moveName].name}.`);
+                this.printMoveset();
                 return true;
             }
             let n;
@@ -504,6 +530,7 @@
             print(`${this.name} learned ${moveList[moveName].name}.`);
             print(`${this.name} forgot ${moveList[this.moveset[JSON.parse(n)]].name}.`);
             this.moveset.splice(JSON.parse(n), 1);
+            this.printMoveset();
             return true;
         }
 
@@ -662,7 +689,18 @@
             const coords = screenCoords(this.position);
             if (this.sprite && this.loaded) {
                 ctx.drawImage(this.image, this.size * game.arrowNumber[this.direction], 0, this.size, this.size, coords.x - Math.floor(this.size/2) + 12, coords.y - this.size + 24, this.size, this.size);
-            } 
+
+            }
+            if (this.HP < this.stat.maxHP) {
+                ctx.fillStyle = 'black';
+                ctx.fillRect(coords.x + 1, coords.y - 1, 20, 3);
+                ctx.fillStyle = 'grey';
+                ctx.fillRect(coords.x + 1, coords.y - 1, 20, 2);
+                const pertwenty = Math.ceil(20 * this.HP / this.stat.maxHP)
+                ctx.fillStyle = ['red','yellow','green'][0 + (pertwenty >= 4) + (pertwenty >= 10)];
+                ctx.fillRect(coords.x + 1, coords.y - 1, pertwenty, 2);
+            }
+
 /*             else {
                 ctx.fillStyle = this.color;
                 ctx.fillRect(coords.x, coords.y, Math.floor(canvas.width / w), Math.floor(canvas.height / h));
@@ -955,12 +993,16 @@
         }
     });
     
-    for (const key of ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Space', 'KeyZ', 'KeyX', 'KeyC','KeyV']) {
+    for (const key of ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Space', 'KeyZ', 'KeyX', 'KeyC','KeyV','KeyP']) {
         document.getElementById(key).addEventListener('click', (e) => {
             game.actionQueue.push(key);
             game.doStuff();
         })
     }
+
+    moveSelector.addEventListener('change', (e) => {
+        game.you.moveSelected = JSON.parse(moveSelector.value);
+    })
 
     const game = {
 
@@ -1002,7 +1044,7 @@
 
         toggleControl: function() {
             this.controlAll = !this.controlAll;
-            alert(`Now controlling ${this.controlAll ? 'whole team' : 'current character'}!`)
+            alert(`Now controlling ${this.controlAll ? 'whole team' : 'current character only'}!`)
             for (let i = 0; i < this.spriteList.length; i++) {
                 const sprite = this.spriteList[i];
                 if (sprite.team == 0 && i != this.iter) {
@@ -1122,6 +1164,7 @@
             }
 
             this.you = sprite;
+            this.you.printMoveset();
             if (this.actionQueue.length == 0) {
                 sprite.actionCounter++;
                 this.drawEverything(this.you.position);
@@ -1133,7 +1176,7 @@
                 this.you.move(code);
             }
             if (code == 'Space') {
-                this.you.useMove();
+                this.you.useMove(JSON.parse(moveSelector.value));
                 //this.you.attack(this.you.getTarget(), 5);
             }
             if (['Digit1', 'Digit2', 'Digit3', 'Digit4'].includes(code)) {
