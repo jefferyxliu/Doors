@@ -4,6 +4,9 @@
   <head>
   <meta name="viewport" content="height=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <style>
+    body {
+        touch-action: manipulation;
+    }
 
     canvas {
         border: 1pt solid black;
@@ -676,7 +679,7 @@
             this.HPBarCtx.fillStyle = ['red','yellow','green'][0 + (percent >= 20) + (percent >= 50)];
             this.HPBarCtx.fillRect(0, 0, percent, 15);
             this.HPBarCtx.fillStyle = 'black';
-            this.HPBarCtx.font = "bold 14px Arial";
+            this.HPBarCtx.font = "12px Gill Sans";
             this.HPBarCtx.fillText(`${this.HP}/${this.stat.maxHP}`, 5, 13);
             if (hidden) {
                 this.nameBox.style.display = 'none';
