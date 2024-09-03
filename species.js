@@ -169,6 +169,23 @@ const speciesList = {
         }
     },
 
+    flautaire: {
+        stat: {
+            maxHP: 65,
+            atk: 55,
+            def: 65,
+            spa: 125,
+            spd: 105,
+            cooldown: 9,
+            nature: 'attack',
+            types: ['fairy','normal'],
+            color:'black',
+            sprite: 'pokemon/flautaire',
+            size: 32,
+            defaultMoves: ['moveHyperVoice']
+        }
+    },
+
     sanfi: {
         stat: {
             maxHP: 35,

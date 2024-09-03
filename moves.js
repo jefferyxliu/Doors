@@ -3,6 +3,7 @@ const attackPatterns = {
     beam: [{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}],
     wedge: [{x:1, y:0}, {x:1, y:1}, {x:1, y:-1}, {x:2, y:0}],
     ring: [{x:1, y:0}, {x:0, y:1}, {x:-1, y:0}, {x:0, y:-1}],
+    ball: [{x:1, y:0}, {x:2, y:1}, {x:2, y:-1}, {x:2, y:0}, {x:3, y:0}],
     spread: [{x:1, y:0}, {x:-1, y:0}, {x:0, y:1}, {x:0, y:-1}, {x:1, y:1}, {x:1, y:-1}, {x:-1, y:1}, {x:-1, y:-1}],
 }
 
@@ -27,6 +28,16 @@ const moveList = {
         userSecondaryEffect: function(user) {
             user.actionCounter += 5;
         },
+        description: ''
+    },
+
+    moveHyperVoice: {
+        name:'Hyper Voice',
+        type: 'normal',
+        category: 'special',
+        pattern: 'spread',
+        basePower: 90,
+        baseAccuracy: 100,
         description: ''
     },
 
@@ -232,6 +243,19 @@ const moveList = {
         description: ''
     },
 
+    moveMysticalFire: {
+        name:'Mystical Fire',
+        type: 'fire',
+        category: 'special',
+        pattern: 'wedge',
+        basePower: 75,
+        baseAccuracy: 100,
+        targetSecondaryEffect: function(target) {
+            target.changeStatStage('spa', -10);
+        },
+        description: ''
+    },
+
     moveSurf: {
         name:'Surf',
         type: 'water',
@@ -312,6 +336,21 @@ const moveList = {
         pattern: 'beam',
         basePower: 85,
         baseAccuracy: Infinity,
+        description: ''
+    },
+
+    moveMoonblast: {
+        name:'Moonblast',
+        type: 'fairy',
+        category: 'special',
+        pattern: 'ball',
+        basePower: 95,
+        baseAccuracy: 100,
+        targetSecondaryEffect: function(target) {
+            if (Math.floor(Math.random() * 100) < 30) {
+                target.changeStatStage('spa', -10);
+            }
+        },
         description: ''
     }
 }
@@ -724,7 +763,7 @@ const moveAnimation = {
         'ice': 2,
         'dark': 7,
         'dragon': 0,
-        'fairy': 0,
+        'fairy': 17,
     },
 
     draw: function (user, move, options) {

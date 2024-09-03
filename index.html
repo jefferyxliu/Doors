@@ -30,12 +30,15 @@
         font-size: 12px;
     }
 
-    #textbox {
-        overflow: scroll;
+    .menu {
         border-radius: 8px;
         background-image: linear-gradient(to right, rgba(0,0,0,0.5), rgba(0,0,0,0)); 
         font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
         color: white;
+    }
+
+    #textbox {
+        overflow: scroll;
         position: absolute;
         height: 80px;
         max-height: 80px;
@@ -44,6 +47,10 @@
         margin-left: 1px;
         margin-bottom: 5px;
         bottom: 0;
+    }
+
+    #promptMenu {
+        border-radius: 8px;
     }
 
     .hide {
@@ -106,7 +113,14 @@
     <div id="gridDisplay">
         <div style="grid-row: 1; grid-column: 1; position: relative;">
             <canvas id="canvas2" width="device-width" height="device-width"></canvas>
-            <div id="textbox"></div>
+            <div id="textbox" class="menu"></div>
+            <dialog id="promptMenu">
+                <label>Do you like apples?</label><br>
+                <input type="radio" id="choice0" name="promptMenuOption" value="0" />
+                <label for="choice0">Yes</label><br>
+                <input type="radio" id="choice1" name="promptMenuOption" value="1" />
+                <label for="choice1">No</label>
+            </dialog>
         </div>
         <div style="grid-row: 1; grid-column: 2;" id = "StatBox"></div>
         
@@ -930,13 +944,22 @@
                 return false;
             }
             const w = this.warpZones[`${coord.x},${coord.y}`];
-            if (prompt(`Proceed to ${w.name}? (y/n)`,'y') != 'y') {
+
+            game.prompt(`Proceed to ${w.name}?`,['Yes','No'], () => {
+                if (game.promptOptionSelected == 1) {
+                    return false;
+                }
+                document.getElementById('StatBox').innerHTML = '';
+                game.loadMap(game.spriteList.filter((sprite)=>{return sprite.team == 0}), w.name, w.spawnLocation);
+            })
+
+            /* if (prompt(`Proceed to ${w.name}? (y/n)`,'y') != 'y') {
                 return false;
             }
             document.getElementById('StatBox').innerHTML = '';
 
             game.loadMap(game.spriteList.filter((sprite)=>{return sprite.team == 0}), w.name, w.spawnLocation);
-            return true;
+            return true; */
         }
 
 /*         draw(camera) {
@@ -1007,6 +1030,10 @@
         game.you.moveSelected = JSON.parse(moveSelector.value);
     })
 
+    document.getElementById('promptMenu').addEventListener("close", (e) => {
+        game.onClosePrompt(e);
+    });
+
     const game = {
 
         actionQueue: [],
@@ -1022,6 +1049,8 @@
         spriteList: false,
 
         controlAll: false,
+
+        promptOptionSelected: false,
 
         iter: 0,
 
@@ -1045,6 +1074,27 @@
             'ArrowDown': 'ArrowUp',
         },
 
+        closePrompt: function(i) {
+            document.getElementById('promptMenu').close();
+            game.promptOptionSelected = JSON.parse(i);
+        },
+
+        onClosePrompt: function(e) {
+            alert(game.promptOptionSelected);
+        },
+
+        prompt: function(promptText, options, onClose) {
+            game.onClosePrompt = onClose;
+            const promptMenu = document.getElementById('promptMenu');
+            promptMenu.innerHTML = '';
+            const optionInputs = [`<label>${promptText}</label>`];
+            for (let i = 0; i < options.length; i++) {
+                optionInputs.push(`<input type="radio" id="choice-${i}" name="promptMenuOption" value="${i}" onclick="game.closePrompt(${i})" ${i == 0 ? 'checked' : ''}/><label for="choice-${i}">${options[i]}</label>`)
+            }
+            promptMenu.innerHTML = optionInputs.join('<br>');
+            promptMenu.showModal();
+        },
+
         toggleControl: function() {
             this.controlAll = !this.controlAll;
             alert(`Now controlling ${this.controlAll ? 'whole team' : 'current character only'}!`)
@@ -1052,6 +1102,15 @@
                 const sprite = this.spriteList[i];
                 if (sprite.team == 0 && i != this.iter) {
                     sprite.control = this.controlAll;
+                }
+            }
+        },
+
+        issueTeamCommand: function(command) {
+            for (let i = 0; i < this.spriteList.length; i++) {
+                const sprite = this.spriteList[i];
+                if (sprite.team == 0) {
+                    sprite.stat.nature = command;
                 }
             }
         },
@@ -1351,21 +1410,29 @@
     function secretTest() {
         
         const coord = game.you.position;
-        game.spriteList[0] = new Entity({
+        game.spawnEntity({
             nickname: 'Sanctuavia',
-            stat: {
-                maxHP: 85,
-                atk: 70,
-                def: 85,
-                spa: 120,
-                spd: 95,
-                cooldown: 8,
-                nature: 'attack',
-                types: ['flying'],
-                color:'black',
-                sprite: 'pokemon/sanctuavia',
-                size: 32
+            speciesName: 'sanctuavia',
+            position: {
+                x: 25,
+                y: 17
             },
+            options: {
+                direction: 'ArrowRight',
+                item: 'none',
+                team: 0,
+                control: false,
+                moveset: [
+                    'moveAeropulse',
+                    'moveIceBeam',
+                    'moveEarthPower',
+                    'moveRoost'
+                ]
+            }
+        })
+        game.spawnEntity({
+            nickname: 'Flautaire',
+            speciesName: 'flautaire',
             position: {
                 x: 25, 
                 y: 17
@@ -1374,17 +1441,18 @@
                 direction: 'ArrowRight',
                 item: 'none',
                 team: 0,
-                control: true,
+                control: false,
                 moveset: [
+                    'moveHyperVoice',
+                    'moveMoonblast',
                     'moveAeropulse',
-                    'moveIceBeam',
-                    'moveEarthPower',
-                    'moveRoost'
+                    'moveRecover'
                 ]
             }
-        });
+        })
         game.you = game.spriteList[0];
         game.you.position = coord;
+        game.issueTeamCommand('follow team');
         game.map.tiles[17][23] = 4;
         setTimeout(()=>{game.drawEverything(game.you.position);}, 500);
     }
