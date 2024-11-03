@@ -1003,7 +1003,7 @@
     }
 
     document.addEventListener('keydown', e => {
-        if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Space', 'KeyZ', 'KeyX', 'KeyC', 'KeyV','KeyH','KeyP','Digit1','Digit2','Digit3','Digit4'].includes(e.code)) {
+        if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Space', 'KeyZ', 'KeyX', 'KeyC', 'KeyV','KeyH','KeyP','Digit1','Digit2','Digit3','Digit4','KeyI','KeyO','KeyU','KeyY'].includes(e.code)) {
             game.actionQueue.push(e.code);
             game.doStuff();
         }
@@ -1050,6 +1050,10 @@
 
         controlAll: false,
 
+        debugMode: false,
+
+        placeBlock: 1,
+
         promptOptionSelected: false,
 
         iter: 0,
@@ -1072,6 +1076,10 @@
             'ArrowLeft': 'ArrowRight',
             'ArrowUp': 'ArrowDown',
             'ArrowDown': 'ArrowUp',
+        },
+
+        exportMapTiles() {
+            console.log(JSON.stringify(this.map.tiles))
         },
 
         closePrompt: function(i) {
@@ -1263,6 +1271,21 @@
             if (code == 'KeyP') {
                 this.toggleControl();
             }
+            if (this.debugMode) {
+                if (code == 'KeyI') {
+                    this.map.tiles[this.you.position.y][this.you.position.x] = this.placeBlock;
+                }
+                if (code == 'KeyO') {
+                    this.placeBlock++;
+                }
+                if (code == 'KeyU') {
+                    this.placeBlock--;
+                }
+                if (code == 'KeyY') {
+                    this.map.tiles[this.you.position.y][this.you.position.x] = 0;
+                }
+            }
+
             this.actionQueue.splice(0,1);
 
             if (sprite.actionCounter <= 0) {
@@ -1406,6 +1429,55 @@
     resize();
     game.loadMap(getRestartSpriteList(), 'doors');
     //setTimeout(game.doStuff, 500);
+
+    function getArrayZeros(x,y) {
+        let a = [];
+        let b;
+        for (let i = 0; i < y; i++) {
+            b = new Array(x);
+            b.fill(0);
+            a.push(b);
+        }
+        return a;
+    }
+
+    function debugMode(x=32, y=32) {
+        alert('Debug Mode; I: place tile, O/U: switch tiles, Y: place floor');
+        game.loadMap([new Entity({
+                nickname: 'Human',
+                stat: {
+                    maxHP: Infinity,
+                    atk: 80,
+                    def: 100,
+                    spa: 80,
+                    spd: 100,
+                    cooldown: 10,
+                    nature: 'follow team',
+                    types: ['normal'],
+                    color:'black',
+                    sprite: 'human',
+                    size: 24
+                },
+                position: {
+                    x: 0, 
+                    y: 0
+                },
+                options: {
+                    direction: 'ArrowRight',
+                    item: 'none',
+                    team: 0,
+                    control: true,
+                    moveset: [
+                        'moveTackle'
+                    ]
+                }
+            })], 'builder');
+        game.map.tiles = getArrayZeros(x,y)
+        game.debugMode = true;
+        game.you.solidTiles = [];
+        
+        setTimeout(()=>{game.drawEverything(game.you.position);}, 500);
+    }
 
     function secretTest() {
         
