@@ -101,6 +101,40 @@ const speciesList = {
         },
     },
 
+    giggle: {
+        stat: {
+            maxHP: 80,
+            atk: 15,
+            def: 60,
+            spa: 15,
+            spd: 60,
+            cooldown: 8,
+            nature: 'attack',
+            types: ['fighting'],
+            color:'brown',
+            sprite: 'giggle',
+            size: 32,
+            defaultMoves: ['moveDarkPulse']
+        },
+    },
+
+    grumble: {
+        stat: {
+            maxHP: 150,
+            atk: 50,
+            def: 60,
+            spa: 15,
+            spd: 60,
+            cooldown: 10,
+            nature: 'attack',
+            types: ['fighting'],
+            color:'brown',
+            sprite: 'grumble',
+            size: 153,
+            defaultMoves: ['moveDarkPulse']
+        },
+    },
+
     albaby: {
         stat: {
             maxHP: 45,

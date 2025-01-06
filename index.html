@@ -1376,8 +1376,8 @@
                     size: 24
                 },
                 position: {
-                    x: 25, 
-                    y: 17
+                    x: 6, 
+                    y: 22
                 },
                 options: {
                     direction: 'ArrowRight',
@@ -1406,8 +1406,8 @@
                     size: 24
                 },
                 position: {
-                    x: 53,
-                    y: 17
+                    x: 21,
+                    y: 19
                 },
                 options: {
                     direction: 'ArrowRight',
@@ -1427,7 +1427,7 @@
     
     //alert('Escape the hotel. Beware the entities!');
     resize();
-    game.loadMap(getRestartSpriteList(), 'doors');
+    game.loadMap(getRestartSpriteList(), 'hotelLobby');
     //setTimeout(game.doStuff, 500);
 
     function getArrayZeros(x,y) {
@@ -1443,7 +1443,8 @@
 
     function debugMode(x=32, y=32) {
         alert('Debug Mode; I: place tile, O/U: switch tiles, Y: place floor');
-        game.loadMap([new Entity({
+        game.loadMap([new Entity(
+            {
                 nickname: 'Human',
                 stat: {
                     maxHP: Infinity,
@@ -1471,10 +1472,31 @@
                         'moveTackle'
                     ]
                 }
-            })], 'builder');
+            }
+        )], 'builder');
         game.map.tiles = getArrayZeros(x,y)
         game.debugMode = true;
         game.you.solidTiles = [];
+       /*  game.spawnEntity(
+            {
+            nickname: 'Grumble',
+            speciesName: 'grumble',
+            position: {
+                x: 1, 
+                y: 1
+            },
+            options: {
+                direction: 'ArrowDown',
+                item: 'none',
+                team: 1,
+                control: false,
+                moveset: [
+                    'moveTackle',
+                    'moveRecover'
+                ]
+            }
+        }
+        ) */
         
         setTimeout(()=>{game.drawEverything(game.you.position);}, 500);
     }
