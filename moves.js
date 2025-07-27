@@ -1,6 +1,7 @@
 const attackPatterns = {
     front: [{x:1, y:0}],
     beam: [{x:1, y:0}, {x:2, y:0}, {x:3, y:0}, {x:4, y:0}],
+    wide: [{x:1, y:0}, {x:1, y:1}, {x:1, y:-1}],
     wedge: [{x:1, y:0}, {x:1, y:1}, {x:1, y:-1}, {x:2, y:0}],
     ring: [{x:1, y:0}, {x:0, y:1}, {x:-1, y:0}, {x:0, y:-1}],
     ball: [{x:1, y:0}, {x:2, y:1}, {x:2, y:-1}, {x:2, y:0}, {x:3, y:0}],
@@ -26,7 +27,20 @@ const moveList = {
         basePower: 30,
         baseAccuracy: 100,
         userSecondaryEffect: function(user) {
-            user.actionCounter += 5;
+            user.actionCounter -= 3;
+        },
+        description: ''
+    },
+
+    moveSlash: {
+        name:'Slash',
+        type: 'normal',
+        category: 'physical',
+        pattern: 'wide',
+        basePower: 70,
+        baseAccuracy: 100,
+        onModifyCriticalHitStage: function(criticalHitStage) {
+            return criticalHitStage + 1;
         },
         description: ''
     },
@@ -111,6 +125,22 @@ const moveList = {
         description: ''
     },
 
+    moveWalkSpeedOverride: {
+        name:'Walk Speed Override',
+        type: 'fighting',
+        category: 'physical',
+        pattern: 'beam',
+        basePower: 40,
+        baseAccuracy: 100,
+        userSecondaryEffect: function(user) {
+            user.actionCounter -= 3;
+        },
+        targetSecondaryEffect: function(target) {
+            target.inflictStatus('burn', 3);
+        },
+        description: ''
+    },
+
     movePeck: {
         name:'Peck',
         type: 'flying',
@@ -187,6 +217,19 @@ const moveList = {
             if (Math.floor(Math.random() * 100) < 30) {
                 target.inflictStatus('poison', 3);
             }
+        },
+        description: ''
+    },
+
+    moveMassInfection: {
+        name:'Mass Infection',
+        type: 'poison',
+        category: 'special',
+        pattern: 'beam',
+        basePower: 95,
+        baseAccuracy: 100,
+        targetSecondaryEffect: function(target) {
+            target.inflictStatus('poison', 3);
         },
         description: ''
     },
@@ -329,6 +372,26 @@ const moveList = {
         description: ''
     },
 
+    moveDigitalFootprint: {
+        name:'Digital Footprint',
+        type: 'dark',
+        category: 'special',
+        pattern: 'spread',
+        basePower: 70,
+        baseAccuracy: 100,
+        description: ''
+    },
+
+    moveCorruptEnergy: {
+        name:'Corrupt Energy',
+        type: 'dark',
+        category: 'special',
+        pattern: 'beam',
+        basePower: 90,
+        baseAccuracy: 100,
+        description: ''
+    },
+
     moveDragonPulse: {
         name:'Dragon Pulse',
         type: 'dragon',
@@ -449,24 +512,40 @@ function damageFormula(user, target, move, options) {
     const damageAdjust = 0.6;
     let s = [];
 
+    //Determine Critical Hit
+    let isCrit = false;
+    let criticalHitStage = 0;
+    if (Object.hasOwn(move, 'onModifyCriticalHitStage')) {
+        criticalHitStage = move.onModifyCriticalHitStage(criticalHitStage); 
+    };
+    if (criticalHitStage >= 0) {
+        if (Math.floor(Math.random() * criticalHitChanceModifier[Math.min(criticalHitStage,3)]) == 0) {
+            isCrit = true;
+            s.push('Critical hit!');
+        }
+    }
+
+
     let attackingStat, defendingStat;
     
     if (move.category == 'physical') {
         attackingStat = user.stat.atk + 20;
         defendingStat = target.stat.def + 20;
 
-        attackingStat = user.modifyStat('atk', attackingStat);
-        defendingStat = target.modifyStat('def', defendingStat);
+        attackingStat = user.modifyStat('atk', attackingStat, isCrit);
+        defendingStat = target.modifyStat('def', defendingStat, isCrit);
     }
     if (move.category == 'special') {
         attackingStat = user.stat.spa + 20;
         defendingStat = target.stat.spd + 20;
 
-        attackingStat = user.modifyStat('spa', attackingStat);
-        defendingStat = target.modifyStat('spd', defendingStat);
+        attackingStat = user.modifyStat('spa', attackingStat, isCrit);
+        defendingStat = target.modifyStat('spd', defendingStat, isCrit);
     }
 
     let basePower = move.basePower;
+
+
 
     let damage = Math.floor(Math.floor(22 * damageAdjust * basePower * attackingStat / defendingStat) / 50) + 2;
     //spread modifier
@@ -475,9 +554,8 @@ function damageFormula(user, target, move, options) {
     }
 
     //critical hit modifier
-    if (Math.floor(Math.random() * 24) == 0) {
+    if (isCrit) {
         damage *= 1.5;
-        s.push('Critical hit!');
     }
 
     //random modifier
@@ -515,7 +593,7 @@ function damageFormula(user, target, move, options) {
 }
 
 
-
+const criticalHitChanceModifier = [24, 8, 2, 1];
 
 const typeChart = {
     'normal': {

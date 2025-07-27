@@ -459,7 +459,7 @@
             return true;
         }
 
-        modifyStat(stat, baseValue) {
+        modifyStat(stat, baseValue, ignoreNegativeStatChanges = false) {
             let value = baseValue;
             if (this.item != 'none') {
                 const item = this.getItem();
@@ -467,7 +467,17 @@
                     value *= item[`${stat}StatModifier`];
                 };
             }
-            for (const status in this.statusEffects) {
+
+            let statusEffects = Object.keys(this.statusEffects);
+            if (ignoreNegativeStatChanges) {
+                statusEffects = statusEffects.filter((status)=>{
+                    return !(['atkDown','spaDown','defUp','spdUp'].includes(status));
+                })           
+            }
+            
+
+            for (const status of statusEffects) {
+                
                 const st = statusList[status];
                 if (Object.hasOwn(st, `${stat}StatModifier`)) {
                     value *= st[`${stat}StatModifier`];
@@ -604,10 +614,15 @@
         }
 
         pickUpItem() {
-            if (this.isAlive() && this.item == 'none') {
-                this.item = game.map.getItem(this.position);
-                print(`${this.name} picked up ${itemList[this.item].name}`);
+            if (!this.isAlive() || this.item != 'none') {
+                return false;
             }
+            const item = game.map.getItem(this.position);
+            if (item == 'none') {
+                return false;
+            }
+            this.item = item;
+            print(`${this.name} picked up ${itemList[this.item].name}`);
         }
 
         dropItem() {
@@ -1135,6 +1150,14 @@
             )
         },
 
+        killEntity: function(i) {
+            console.log(`${this.spriteList[i].name} deleted`)
+            //document.getElementById(`${this.spriteList[i].secretID}-Box`).remove();
+            this.spriteList[i].HP = 0;
+            
+            return true;
+        },
+
         spawnRandomEncounter: function() {
             if (this.spriteList.length > 10) {
                 return false;
@@ -1316,8 +1339,8 @@
                     const coords = screenCoords({x: j, y: i});
                     const col = this.map.tiles[i][j] % 6;
                     const row = Math.floor(this.map.tiles[i][j] / 6);
-                    if (this.map.sprite && this.map.loaded && dist1(camera, {x: j, y: i}) < 6) {
-                        ctx.drawImage(this.map.image, 24 * col, 48 * row, 24, 48, coords.x, coords.y - 24, 24, 48);
+                    if (this.map.sprite && this.map.loaded && dist1(camera, {x: j, y: i}) < 7) {
+                        ctx.drawImage(this.map.image, 24 * col, 48 * row, 24, 48, coords.x, coords.y - 12, 24, 48);
                     }
                 }
 
@@ -1372,8 +1395,8 @@
                     nature: 'follow team',
                     types: ['normal'],
                     color:'black',
-                    sprite: 'human',
-                    size: 24
+                    sprite: 'noobHair',
+                    size: 32
                 },
                 position: {
                     x: 6, 
@@ -1385,7 +1408,10 @@
                     team: 0,
                     control: true,
                     moveset: [
-                        'moveTackle'
+                        'moveSlash',
+                        'moveMassInfection',
+                        'moveWalkSpeedOverride',
+                        'moveDigitalFootprint'
                     ]
                 }
             }),
@@ -1393,7 +1419,7 @@
             new Entity({
                 nickname: 'Random Noob',
                 stat: {
-                    maxHP: 10,
+                    maxHP: Infinity,
                     atk: 10,
                     def: 10,
                     spa: 10,
@@ -1402,8 +1428,8 @@
                     nature: 'follow team',
                     types: ['normal'],
                     color:'black',
-                    sprite: 'human2',
-                    size: 24
+                    sprite: 'noobRedHair',
+                    size: 32
                 },
                 position: {
                     x: 21,
@@ -1427,7 +1453,7 @@
     
     //alert('Escape the hotel. Beware the entities!');
     resize();
-    game.loadMap(getRestartSpriteList(), 'hotelLobby');
+    game.loadMap(getRestartSpriteList(), 'esirykTower1F');
     //setTimeout(game.doStuff, 500);
 
     function getArrayZeros(x,y) {
@@ -1504,18 +1530,20 @@
     function secretTest() {
         
         const coord = game.you.position;
+
+        for (let i = 0; i < game.spriteList.length; i++) {
+            game.killEntity(i);
+        }
+
         game.spawnEntity({
             nickname: 'Sanctuavia',
             speciesName: 'sanctuavia',
-            position: {
-                x: 25,
-                y: 17
-            },
+            position: coord,
             options: {
                 direction: 'ArrowRight',
                 item: 'none',
                 team: 0,
-                control: false,
+                control: true,
                 moveset: [
                     'moveAeropulse',
                     'moveIceBeam',
@@ -1524,13 +1552,12 @@
                 ]
             }
         })
-        game.spawnEntity({
+
+
+        /* game.spawnEntity({
             nickname: 'Flautaire',
             speciesName: 'flautaire',
-            position: {
-                x: 25, 
-                y: 17
-            },
+            position: coord,
             options: {
                 direction: 'ArrowRight',
                 item: 'none',
@@ -1543,7 +1570,7 @@
                     'moveRecover'
                 ]
             }
-        })
+        }) */
         game.you = game.spriteList[0];
         game.you.position = coord;
         game.issueTeamCommand('follow team');

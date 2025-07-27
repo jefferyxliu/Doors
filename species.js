@@ -10,8 +10,8 @@ const speciesList = {
             nature: 'follow team',
             types: ['normal'],
             color: 'black',
-            sprite: 'human',
-            size: 24,
+            sprite: 'noobHair',
+            size: 32,
             defaultMoves: ['moveTackle']
         }
     },
