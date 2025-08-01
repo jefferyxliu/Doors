@@ -234,6 +234,19 @@ const moveList = {
         description: ''
     },
 
+    moveEntanglement: {
+        name:'Entanglement',
+        type: 'poison',
+        category: 'special',
+        pattern: 'beam',
+        basePower: 70,
+        baseAccuracy: 100,
+        targetSecondaryEffect: function(target) {
+            target.actionCounter += 3;
+        },
+        description: ''
+    },
+
     moveEarthPower: {
         name:'Earth Power',
         type: 'ground',

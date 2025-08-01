@@ -10,9 +10,64 @@ const speciesList = {
             nature: 'follow team',
             types: ['normal'],
             color: 'black',
-            sprite: 'noobHair',
+            sprite: 'forsaken/noobHair',
             size: 32,
             defaultMoves: ['moveTackle']
+        }
+    },
+
+    '1x1x1x1': {
+        stat: {
+            maxHP: 600,
+            atk: 100,
+            def: 80,
+            spa: 80,
+            spd: 80,
+            cooldown: 12,
+            nature: 'attack',
+            types: ['poison'],
+            color: 'black',
+            sprite: 'forsaken/1x1x1x1',
+            size: 32,
+            defaultMoves: ['moveTackle']
+        }
+    },
+
+    c00lkidd: {
+        stat: {
+            maxHP: 600,
+            atk: 100,
+            def: 80,
+            spa: 80,
+            spd: 80,
+            cooldown: 12,
+            nature: 'attack',
+            types: ['fire'],
+            color: 'black',
+            sprite: 'forsaken/c00lkidd',
+            size: 32,
+            defaultMoves: ['moveWalkSpeedOverride']
+        }
+    },
+
+    JohnDoe: {
+        stat: {
+            maxHP: 1000,
+            atk: 100,
+            def: 80,
+            spa: 80,
+            spd: 80,
+            cooldown: 12,
+            nature: 'attack',
+            types: ['dark'],
+            color: 'black',
+            sprite: 'forsaken/JohnDoe',
+            size: 32,
+            defaultMoves: [
+                'moveDigitalFootprint',
+                'moveCorruptEnergy',
+                'moveSlash'
+            ]
         }
     },
 
@@ -27,7 +82,7 @@ const speciesList = {
             nature: 'follow team',
             types: ['normal'],
             color:'black',
-            sprite: 'human2',
+            sprite: 'forsaken/noobRedHair',
             size: 24,
             defaultMoves: ['moveTackle']
         }
@@ -44,7 +99,7 @@ const speciesList = {
             nature: 'attack',
             types: ['fighting'],
             color:'brown',
-            sprite: 'figure',
+            sprite: 'doors/figure',
             size: 24,
             defaultMoves: ['moveKarateChop']
         }
@@ -61,7 +116,7 @@ const speciesList = {
             nature: 'back and forth',
             types: ['dark'],
             color:'brown',
-            sprite: 'rush',
+            sprite: 'doors/rush',
             size: 24,
             defaultMoves: ['moveDarkPulse']
         }
@@ -78,7 +133,7 @@ const speciesList = {
             nature: 'attack',
             types: ['poison'],
             color:'brown',
-            sprite: 'seek',
+            sprite: 'doors/seek',
             size: 24,
             defaultMoves: ['moveSludgeBomb']
         }
@@ -95,7 +150,7 @@ const speciesList = {
             nature: 'back and forth',
             types: ['ghost'],
             color:'brown',
-            sprite: 'ambush',
+            sprite: 'doors/ambush',
             size: 24,
             defaultMoves: ['moveDarkPulse']
         },
@@ -112,7 +167,7 @@ const speciesList = {
             nature: 'attack',
             types: ['fighting'],
             color:'brown',
-            sprite: 'giggle',
+            sprite: 'doors/giggle',
             size: 32,
             defaultMoves: ['moveDarkPulse']
         },
@@ -129,7 +184,7 @@ const speciesList = {
             nature: 'attack',
             types: ['fighting'],
             color:'brown',
-            sprite: 'grumble',
+            sprite: 'doors/grumble',
             size: 153,
             defaultMoves: ['moveDarkPulse']
         },

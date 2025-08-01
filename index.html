@@ -6,6 +6,7 @@
   <style>
     body {
         touch-action: manipulation;
+        background-color: rgb(0, 97, 91);
     }
 
     canvas {
@@ -19,13 +20,24 @@
     }
 
     input {  
+        appearance: none;
         text-wrap: wrap;
+        background-color: rgba(0,0,0,0);
+        border-radius: 8px;
+        background-image: linear-gradient(to right, rgba(0,0,0,0.5), rgba(0,0,0,0));
+        color: white;
         font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
         font-size: 12px;
+
     }
 
-    select {  
+    select { 
+        appearance: none;
         text-wrap: wrap;
+        background-color: rgba(0,0,0,0);
+        border-radius: 8px;
+        background-image: linear-gradient(to right, rgba(0,0,0,0.5), rgba(0,0,0,0));
+        color: white;
         font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
         font-size: 12px;
     }
@@ -49,8 +61,40 @@
         bottom: 0;
     }
 
+    dialog {
+        position: absolute;
+        padding-left: 5px;
+        padding-bottom: 5px;
+        margin-left: 1px;
+        margin-bottom: 5px;
+        bottom: 90px;
+        border-radius: 8px;
+        background-color: rgba(0,0,0,0);
+        border-color: rgba(0,0,0,0);
+        background-image: linear-gradient(to right, rgba(0,0,0,0.5), rgba(0,0,0,0)); 
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        color: white;
+    }
+
+    .radioButton {
+        appearance: none;
+        width: 8px;
+        height: 8px;
+    }
+
+    .radioButton:checked {
+        appearance: none;
+        border-radius: 50%;
+        width: 8px;
+        height: 8px;
+        border: 4px solid white;
+    }
+
     #promptMenu {
         border-radius: 8px;
+        background-image: linear-gradient(to right, rgba(0,0,0,0.5), rgba(0,0,0,0)); 
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        color: white;
     }
 
     .hide {
@@ -60,6 +104,9 @@
 
     #gridDisplay {
         border: 1pt solid black;
+        background-image: linear-gradient(to right, rgba(0,0,0,1), rgba(0,0,0,0.5)); 
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        color: white;
         border-radius: 8px;
         padding: 5px;
         display: grid;
@@ -75,6 +122,9 @@
     }
     
     #gridDisplay2 {
+        background-image: linear-gradient(to right, rgba(0,0,0,1), rgba(0,0,0,0.5)); 
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        color: white;
         border: 1pt solid black;
         border-radius: 8px;
         padding: 5px;
@@ -150,6 +200,10 @@
 <script src = "items.js">//must load moves first (before TMs)</script> 
 <script src = "statusEffects.js"></script>
 <script>
+    function mod(a,n) {
+        return ((a % n) + n) % n;
+    }
+
     function csvToArray(s) {
         return `[[${s.replaceAll('\n', '],[')}]]`;
     }
@@ -550,14 +604,22 @@
                 this.printMoveset();
                 return true;
             }
-            let n;
+
+            game.prompt(`${this.name} can't learn more than 4 moves. Select a move to forget:`, this.moveset.map((x) => moveList[x].name), () => {
+                print(`${this.name} learned ${moveList[moveName].name}.`);
+                print(`${this.name} forgot ${moveList[this.moveset[game.promptOptionSelected]].name}.`);
+                this.moveset.splice(game.promptOptionSelected, 1);
+                this.printMoveset();
+            })
+
+/*             let n;
             while (!['0','1','2','3','4'].includes(n)) {
                 n = prompt(`${this.name} can't learn more than 4 moves. Select a move to delete (0,1,2,3,4): \n ${this.moveset}`);
             }
             print(`${this.name} learned ${moveList[moveName].name}.`);
             print(`${this.name} forgot ${moveList[this.moveset[JSON.parse(n)]].name}.`);
             this.moveset.splice(JSON.parse(n), 1);
-            this.printMoveset();
+            this.printMoveset(); */
             return true;
         }
 
@@ -705,7 +767,7 @@
             this.nameLabel.innerHTML = s;
             const percent = Math.floor(100 * this.HP / this.stat.maxHP);
             this.HPBarCtx.clearRect(0, 0, 100, 15);
-            this.HPBarCtx.fillStyle = ['red','yellow','green'][0 + (percent >= 20) + (percent >= 50)];
+            this.HPBarCtx.fillStyle = ['red','yellow','rgb(50,255,50)'][0 + (percent >= 20) + (percent >= 50)];
             this.HPBarCtx.fillRect(0, 0, percent, 15);
             this.HPBarCtx.fillStyle = 'black';
             this.HPBarCtx.font = "12px Gill Sans";
@@ -1018,8 +1080,9 @@
     }
 
     document.addEventListener('keydown', e => {
-        if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Space', 'KeyZ', 'KeyX', 'KeyC', 'KeyV','KeyH','KeyP','Digit1','Digit2','Digit3','Digit4','KeyI','KeyO','KeyU','KeyY'].includes(e.code)) {
+        if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'Space', 'KeyZ', 'KeyX', 'KeyC', 'KeyV','KeyH','KeyP','Digit1','Digit2','Digit3','Digit4','KeyI','KeyO','KeyU','KeyY','Enter'].includes(e.code)) {
             game.actionQueue.push(e.code);
+            //console.log(game.actionQueue);
             game.doStuff();
         }
         if (['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) {
@@ -1069,6 +1132,8 @@
 
         placeBlock: 1,
 
+        isPromptOpen: false,
+        promptOptionsLength: 0,
         promptOptionSelected: false,
 
         iter: 0,
@@ -1099,7 +1164,9 @@
 
         closePrompt: function(i) {
             document.getElementById('promptMenu').close();
+            game.isPromptOpen = false;
             game.promptOptionSelected = JSON.parse(i);
+            //textbox.style.display = 'block';
         },
 
         onClosePrompt: function(e) {
@@ -1112,10 +1179,14 @@
             promptMenu.innerHTML = '';
             const optionInputs = [`<label>${promptText}</label>`];
             for (let i = 0; i < options.length; i++) {
-                optionInputs.push(`<input type="radio" id="choice-${i}" name="promptMenuOption" value="${i}" onclick="game.closePrompt(${i})" ${i == 0 ? 'checked' : ''}/><label for="choice-${i}">${options[i]}</label>`)
+                optionInputs.push(`<input type="radio" id="choice-${i}" class="radioButton" name="promptMenuOption" value="${i}" ${i == 0 ? 'checked' : ''}/><label for="choice-${i}" onclick="game.closePrompt(${i})">${options[i]}</label>`)
             }
             promptMenu.innerHTML = optionInputs.join('<br>');
-            promptMenu.showModal();
+            game.promptOptionSelected = 0;
+            game.promptOptionsLength = options.length;
+            game.isPromptOpen = true;
+            //textbox.style.display = 'none';
+            promptMenu.show();
         },
 
         toggleControl: function() {
@@ -1181,6 +1252,17 @@
             }
         },
 
+        teleport: function() {
+            game.prompt(`Go to :`, ['Esiryk Tower', 'Baseplate', 'Hotel'], () => {
+                const m = ['esirykTower1F', 'baseplate', 'hotelLobby'][game.promptOptionSelected]
+                let spawnLocation = false;
+                if (Object.hasOwn(mapData[m], 'spawnLocation')) {
+                    spawnLocation = mapData[m].spawnLocation
+                }
+                game.loadMap(game.spriteList.filter((sprite)=>{return sprite.team == 0}), m, spawnLocation)
+            })
+        },
+
         loadMap: function(s, m, spawnLocation = false) {
             this.map = new Map(deepCopy(mapData[m]));
             this.spriteList = s;
@@ -1215,6 +1297,34 @@
         },
 
         doStuff: function() {
+            if (game.isPromptOpen) {
+                if (this.actionQueue.length == 0) {
+                    return false;
+                }
+
+                const code = this.actionQueue[0];
+
+                if (['ArrowRight', 'ArrowDown'].includes(code)) {
+                    //Get next prompt option
+                    let i = mod(game.promptOptionSelected + 1, game.promptOptionsLength);
+                    game.promptOptionSelected = i;
+                    document.getElementById(`choice-${i}`).checked = true;
+                }
+
+                if (['ArrowLeft', 'ArrowUp'].includes(code)) {
+                    let i = mod(game.promptOptionSelected - 1, game.promptOptionsLength);
+                    game.promptOptionSelected = i;
+                    document.getElementById(`choice-${i}`).checked = true;
+                }
+
+                if (['Space', 'Enter', 'KeyX', 'KeyC'].includes(code)) {
+                    this.closePrompt(game.promptOptionSelected);
+                }
+
+                this.actionQueue.splice(0,1);
+                return false;
+            }
+
             if (this.spriteList.filter((sprite) => {return sprite.control}).length == 0) {
                 return false;
             }
@@ -1224,15 +1334,20 @@
                 sprite.dropItem();
                 this.spriteList.splice(this.iter, 1);
                 this.iter = this.iter % this.spriteList.length;
+                let element = document.getElementById(`${sprite.secretID}-Box`);
+                element.parentNode.removeChild(element);
+                this.actionQueue.splice(0,1);
                 this.drawEverything(this.you.position);
                 print(`${sprite.name} fainted.`);
                 setTimeout(()=>{game.drawEverything(game.you.position);}, 0);
                 if (this.spriteList.filter((sprite) => {return sprite.control}).length == 0) {
-                    alert('You Died. Restart?');
-                    document.getElementById('StatBox').innerHTML = '';
-                    game.loadMap(getRestartSpriteList(), 'doors');
-                    this.iter = 0;
-                    this.actionQueue = [];
+                    game.prompt('Game Over <br> Press [Space] or [Enter] to restart:', ['Restart'], () => {
+                        document.getElementById('StatBox').innerHTML = '';
+                        document.getElementById('textbox').innerHTML = '';
+                        game.loadMap(getRestartSpriteList(), 'baseplate');
+                        this.iter = 0;
+                        this.actionQueue = [];
+                    })
                 }
                 return false;
             }
@@ -1258,6 +1373,7 @@
 
             this.you = sprite;
             this.you.printMoveset();
+
             if (this.actionQueue.length == 0) {
                 sprite.actionCounter++;
                 this.drawEverything(this.you.position);
@@ -1265,6 +1381,7 @@
             }
 
             const code = this.actionQueue[0];
+            
             if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(code)) {
                 this.you.move(code);
             }
@@ -1395,12 +1512,12 @@
                     nature: 'follow team',
                     types: ['normal'],
                     color:'black',
-                    sprite: 'noobHair',
+                    sprite: 'forsaken/noobHair',
                     size: 32
                 },
                 position: {
-                    x: 6, 
-                    y: 22
+                    x: 16, 
+                    y: 16
                 },
                 options: {
                     direction: 'ArrowRight',
@@ -1428,12 +1545,12 @@
                     nature: 'follow team',
                     types: ['normal'],
                     color:'black',
-                    sprite: 'noobRedHair',
+                    sprite: 'forsaken/noobRedHair',
                     size: 32
                 },
                 position: {
-                    x: 21,
-                    y: 19
+                    x: 16,
+                    y: 17
                 },
                 options: {
                     direction: 'ArrowRight',
@@ -1453,7 +1570,8 @@
     
     //alert('Escape the hotel. Beware the entities!');
     resize();
-    game.loadMap(getRestartSpriteList(), 'esirykTower1F');
+    game.loadMap(getRestartSpriteList(), 'baseplate');
+    //game.loadMap(getRestartSpriteList(), 'esirykTower1F');
     //setTimeout(game.doStuff, 500);
 
     function getArrayZeros(x,y) {
@@ -1482,8 +1600,8 @@
                     nature: 'follow team',
                     types: ['normal'],
                     color:'black',
-                    sprite: 'human',
-                    size: 24
+                    sprite: 'forsaken/noob',
+                    size: 32
                 },
                 position: {
                     x: 0, 
@@ -1527,6 +1645,15 @@
         setTimeout(()=>{game.drawEverything(game.you.position);}, 500);
     }
 
+    function testPrompt() {
+        game.prompt(`Do you like apples?`,['Yes','No'], () => {
+            if (game.promptOptionSelected == 1) {
+                game.you.HP = 0;
+                game.drawEverything(game.you.position);
+            }
+        })
+    }
+
     function secretTest() {
         
         const coord = game.you.position;
@@ -1553,6 +1680,22 @@
             }
         })
 
+        game.spawnEntity({
+            nickname: '1x1x1x1',
+            speciesName: '1x1x1x1',
+            position: coord,
+            options: {
+                direction: 'ArrowRight',
+                item: 'none',
+                team: 1,
+                control: false,
+                moveset: [
+                    'moveMassInfection',
+                    'moveSlash',
+                    'moveEntanglement'
+                ]
+            }
+        })
 
         /* game.spawnEntity({
             nickname: 'Flautaire',
